@@ -30,7 +30,7 @@ ZAMU **runs entirely on your device**. There’s no server, no accounts, and no 
 
 ZAMU is free and will remain so. I’m motivated by necessity and by those who, like me, were looking for a more accessible way to pursue their passion. If you find it useful and want it to continue growing and improving, your support makes a real difference:
 
-- 🅿️[ **PayPal**](https://www.paypal.com/ncp/payment/MUBVE3B6CNWSE “ **PayPal**”)
+- [Paypal](https://www.paypal.com/ncp/payment/MUBVE3B6CNWSE)
 
 Sharing the project also helps a lot. Thank you for being here.
 
