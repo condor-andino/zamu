@@ -1,0 +1,1767 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ZAMU</title>
+<style>
+  :root{
+    --bg:#191512; --panel:#201B16; --panel2:#2A241D;
+    --ink:#E9E2D4; --ink2:#9A9083;
+    --accent:#C0563F; --accent2:#D87458; --on-accent:#F8F5EF;
+    --line:#3B3329;
+    --serif:'Cormorant Garamond', Georgia, serif;
+    --mono:'IBM Plex Mono', ui-monospace, Menlo, Consolas, monospace;
+  }
+  :root[data-theme="light"]{
+    --bg:#F2EEE7; --panel:#F8F5EF; --panel2:#ECE6DA;
+    --ink:#2E2B28; --ink2:#6E695F;
+    --accent:#8B3A2F; --accent2:#A34A3B; --on-accent:#F8F5EF;
+    --line:#D9D2C4;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{height:100%; overflow:hidden; font-family:"Segoe UI", system-ui, sans-serif; background:var(--bg); color:var(--ink);}
+  #app{display:flex; height:100%;}
+  #panel{
+    width:256px; min-width:256px; height:100%; overflow-y:auto; overflow-x:hidden;
+    background:var(--panel); border-right:1px solid var(--line); padding:14px 12px 30px;
+    scrollbar-width:thin;
+  }
+  #top{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;}
+  #panel h1{font-family:var(--serif); font-size:24px; letter-spacing:.22em; font-weight:600; color:var(--accent2);}
+  #topCtl{display:flex; gap:5px; align-items:center;}
+  #selLang{
+    font-size:11px; padding:3px 4px; border:1px solid var(--line); border-radius:6px;
+    background:var(--panel2); color:var(--ink); outline:none; max-width:96px;
+  }
+  #bTheme{
+    width:28px; height:26px; font-size:13px; border:1px solid var(--line); border-radius:6px;
+    background:var(--panel2); color:var(--ink); cursor:pointer;
+  }
+  #bTheme:hover{border-color:var(--accent);}
+  .sec{margin-top:10px;}
+  .sec>h2{
+    font-size:10.5px; text-transform:uppercase; letter-spacing:.14em; color:var(--ink2);
+    border-bottom:1px solid var(--line); padding-bottom:3px; margin-bottom:6px; font-weight:600;
+    cursor:pointer; user-select:none; font-family:var(--mono);
+  }
+  .sec>h2::before{content:'▾'; margin-right:6px; font-size:8px; opacity:.7;}
+  .sec.closed>h2::before{content:'▸';}
+  .sec.closed .body{display:none;}
+  .sec>h2:hover{color:var(--ink);}
+  #poses{display:grid; grid-template-columns:1fr 1fr; gap:5px;}
+  #poses button{
+    font-size:11px; padding:6px 4px; border:1px solid var(--line); border-radius:6px;
+    background:var(--panel2); color:var(--ink); cursor:pointer; line-height:1.15;
+  }
+  #poses button:hover{border-color:var(--accent);}
+  #poses button.on{background:var(--accent); border-color:var(--accent); color:var(--on-accent); font-weight:600;}
+  #figs{display:flex; flex-wrap:wrap; gap:5px; margin-bottom:6px;}
+  #figs button{
+    width:38px; height:26px; font-size:11.5px; border:1px solid var(--line); border-radius:6px;
+    background:var(--panel2); color:var(--ink); cursor:pointer;
+  }
+  #figs button.on{background:var(--accent); border-color:var(--accent); color:var(--on-accent); font-weight:700;}
+  #figs button.add{border-style:dashed; color:var(--ink2); background:transparent;}
+  #figs button.add:hover{border-color:var(--accent); color:var(--ink);}
+  #figs button.del:hover{border-color:#c05656; color:#e08080;}
+  .row{display:flex; align-items:center; gap:8px; margin:5px 0; font-size:11.5px;}
+  .row label{flex:0 0 72px; color:var(--ink2);}
+  .sec .body>.row>label[title]{flex-basis:40px;}
+  .row input[type=range]{flex:1; accent-color:var(--accent); min-width:0; cursor:ew-resize;}
+  .row .val{flex:0 0 46px; text-align:right; font-variant-numeric:tabular-nums; color:var(--ink); font-family:var(--mono); font-size:10.5px;}
+  .row input[type=number]{
+    flex:0 0 56px; width:56px; font-size:11px; padding:3px 5px; border:1px solid var(--line);
+    border-radius:5px; background:var(--panel2); color:var(--ink); outline:none;
+    font-variant-numeric:tabular-nums;
+  }
+  .row input[type=number]:focus{border-color:var(--accent);}
+  .btnrow{display:flex; gap:6px; margin-top:8px;}
+  .btnrow button{
+    flex:1; font-size:11.5px; padding:6px 4px; border:1px solid var(--line); border-radius:6px;
+    background:var(--panel2); color:var(--ink); cursor:pointer;
+  }
+  .btnrow button:hover{border-color:var(--accent);}
+  .btnrow button.on{background:var(--accent); border-color:var(--accent); color:var(--on-accent); font-weight:600;}
+  .chks{display:grid; grid-template-columns:1fr 1fr; gap:4px 8px; font-size:11.5px;}
+  .chks label{display:flex; align-items:center; gap:6px; cursor:pointer; color:var(--ink);}
+  .chks input{accent-color:var(--accent);}
+  #poseName{
+    flex:1; min-width:0; font-size:11.5px; padding:5px 8px; border:1px solid var(--line);
+    border-radius:6px; background:var(--panel2); color:var(--ink); outline:none;
+  }
+  #poseName:focus{border-color:var(--accent);}
+  #myPoses{display:flex; flex-direction:column; gap:4px; margin-top:8px;}
+  #myPoses .mypose{display:flex; gap:4px;}
+  #myPoses .mypose>button.apply{
+    flex:1; text-align:left; font-size:11px; padding:5px 8px; border:1px solid var(--line);
+    border-radius:6px; background:var(--panel2); color:var(--ink); cursor:pointer;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+  #myPoses .mypose>button.apply:hover{border-color:var(--accent);}
+  #myPoses .mypose>button.apply.on{background:var(--accent); border-color:var(--accent); color:#1c1408; font-weight:600;}
+  #myPoses .mypose>button.del{
+    flex:0 0 26px; font-size:11px; border:1px solid var(--line); border-radius:6px;
+    background:var(--panel2); color:var(--ink2); cursor:pointer;
+  }
+  #myPoses .mypose>button.del:hover{border-color:#c05656; color:#e08080;}
+  #jointPanel{margin-top:8px;}
+  #jointPanel .jtitle{font-size:11.5px; color:var(--accent2); margin:6px 0 2px; font-weight:600;}
+  #jointHint{font-size:10.5px; color:var(--ink2); margin-top:6px; line-height:1.4;}
+  #help{font-size:10.5px; color:var(--ink2); line-height:1.5; margin-top:16px; border-top:1px solid var(--line); padding-top:8px;}
+  #stage{flex:1; position:relative; min-width:0;}
+  canvas{position:absolute; inset:0; width:100%; height:100%; display:block; touch-action:none;}
+  #hud{
+    position:absolute; left:10px; bottom:8px; font-size:11px; color:var(--ink2); font-family:var(--mono);
+    pointer-events:none; text-shadow:0 1px 2px rgba(0,0,0,.35); user-select:none;
+  }
+  @media (max-width:760px){
+    #app{flex-direction:column;}
+    #panel{width:100%; min-width:0; height:46%; order:2; border-right:none; border-top:1px solid var(--line);}
+    #stage{height:54%;}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="panel">
+    <div id="top">
+      <h1>ZAMU</h1>
+      <div id="topCtl">
+        <select id="selLang" title="Language">
+          <option value="en">English</option>
+          <option value="es">Español</option>
+          <option value="ko">한국어</option>
+          <option value="zh">中文</option>
+          <option value="ja">日本語</option>
+          <option value="de">Deutsch</option>
+          <option value="fr">Français</option>
+        </select>
+        <button id="bTheme">☀</button>
+      </div>
+    </div>
+
+    <div class="sec" data-si="figs">
+      <h2 data-i18n="sFigs">Mannequins</h2>
+      <div class="body">
+      <div id="figs"></div>
+      <div class="row"><label data-i18n="turn" data-i18n-title="turnTip">Turn</label><input id="sTurn" type="range" min="-180" max="180" value="0" step="1"><span class="val" id="vTurn">0°</span></div>
+      <div class="row"><label data-i18n="talla" data-i18n-title="tallaTip">Height</label><input id="sAlt" type="range" min="140" max="300" value="175" step="1"><input id="nAlt" type="number" min="140" max="300" value="175" step="1" title="cm"></div>
+      <div class="btnrow">
+        <button id="bEdit" data-i18n="edit">✎ Edit joints</button>
+      </div>
+      <div id="jointPanel"></div>
+      <div id="jointHint" style="display:none" data-i18n="hint"></div>
+      </div>
+    </div>
+
+    <div class="sec" data-si="poses">
+      <h2 data-i18n="sPoses">Poses</h2>
+      <div class="body">
+      <div id="poses"></div>
+      <div class="btnrow">
+        <button id="bMirror" data-i18n="mirror" data-i18n-title="mirrorTip">⇄ Mirror pose</button>
+      </div>
+      </div>
+    </div>
+
+    <div class="sec" data-si="my">
+      <h2 data-i18n="sMy">My poses</h2>
+      <div class="body">
+      <div class="row" style="margin:4px 0">
+        <input id="poseName" type="text" data-i18n-ph="ph" placeholder="Pose name" maxlength="28">
+      </div>
+      <div class="btnrow">
+        <button id="bSavePose" data-i18n="save">💾 Save current pose</button>
+      </div>
+      <div id="myPoses"></div>
+      <div class="btnrow">
+        <button id="bExport" data-i18n="exp">⬇ Export</button>
+        <button id="bImport" data-i18n="imp">⬆ Import</button>
+      </div>
+      <input id="importFile" type="file" accept=".json,application/json" style="display:none">
+      <div id="storeNote" style="font-size:10px;color:var(--ink2);margin-top:6px;line-height:1.4" data-i18n="note"></div>
+      </div>
+    </div>
+
+    <div class="sec" data-si="persp">
+      <h2 data-i18n="sPersp">Perspective</h2>
+      <div class="body">
+      <div class="row"><label data-i18n="fov">Lens / FOV</label><input id="sFov" type="range" min="14" max="150" value="50" step="1"><span class="val" id="vFov"></span></div>
+      <div class="row"><label data-i18n="curv">Curvilinear</label><input id="sCurv" type="range" min="0" max="100" value="0" step="1"><span class="val" id="vCurv">0%</span></div>
+      <div class="btnrow">
+        <button id="bCamReset" data-i18n="reset">Reset camera</button>
+      </div>
+      </div>
+    </div>
+
+    <div class="sec" data-si="light">
+      <h2 data-i18n="sLight">Lighting</h2>
+      <div class="body">
+      <div class="row"><label data-i18n="ldir">Direction</label><input id="sAz" type="range" min="0" max="360" value="55" step="1"><span class="val" id="vAz">55°</span></div>
+      <div class="row"><label data-i18n="lelev">Elevation</label><input id="sEl" type="range" min="8" max="85" value="42" step="1"><span class="val" id="vEl">42°</span></div>
+      <div class="row"><label data-i18n="lint">Intensity</label><input id="sInt" type="range" min="0" max="150" value="100" step="1"><span class="val" id="vInt">100%</span></div>
+      <div class="row"><label data-i18n="lamb">Ambient</label><input id="sAmb" type="range" min="0" max="80" value="28" step="1"><span class="val" id="vAmb">28%</span></div>
+      <div class="row"><label data-i18n="lfill">Fill</label><input id="sFill" type="range" min="0" max="50" value="10" step="1"><span class="val" id="vFill">10%</span></div>
+      </div>
+    </div>
+
+    <div class="sec" data-si="scene">
+      <h2 data-i18n="sScene">Scene</h2>
+      <div class="body">
+      <div class="chks">
+        <label><input id="cShadow" type="checkbox" checked> <span data-i18n="shadow">Shadow</span></label>
+        <label><input id="cGrid" type="checkbox" checked> <span data-i18n="grid">Grid</span></label>
+        <label><input id="cSun" type="checkbox" checked> <span data-i18n="sun">Show sun</span></label>
+      </div>
+      </div>
+    </div>
+
+    <div class="sec" data-si="help">
+      <h2 data-i18n="sHelp">Help</h2>
+      <div class="body">
+      <div id="help"></div>
+      </div>
+    </div>
+
+    <div class="sec" data-si="support">
+      <h2 data-i18n="sSupport">Support</h2>
+      <div class="body">
+      <div data-i18n="supNote" style="font-size:10.5px;color:var(--ink2);line-height:1.4;margin-bottom:8px"></div>
+      <div>
+        <style>.pp-MUBVE3B6CNWSE{text-align:center;border:none;border-radius:0.25rem;min-width:11.625rem;padding:0 2rem;height:2.625rem;font-weight:bold;background-color:#FFD140;color:#000000;font-family:"Helvetica Neue",Arial,sans-serif;font-size:1rem;line-height:1.25rem;cursor:pointer;}</style>
+        <form action="https://www.paypal.com/ncp/payment/MUBVE3B6CNWSE" method="post" target="_blank" style="display:inline-grid;justify-items:center;align-content:start;gap:0.5rem;">
+          <input class="pp-MUBVE3B6CNWSE" type="submit" value="♥︎" />
+          <img src="https://www.paypalobjects.com/images/Debit_Credit_APM.svg" alt="cards" onerror="this.style.display='none'" />
+          <section style="font-size: 0.75rem;"> Con la tecnología de <img src="https://www.paypalobjects.com/paypal-ui/logos/svg/paypal-wordmark-color.svg" alt="paypal" style="height:0.875rem;vertical-align:middle;" onerror="this.style.display='none'"/></section>
+        </form>
+      </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="stage">
+    <canvas id="cv"></canvas>
+    <div id="hud"></div>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* =====================================================================
+   Maniquí de referencia — renderizador 3D por software (sin librerías).
+   Hasta 10 maniquíes, poses editables por articulación.
+   Solo se redibuja cuando algo cambia: consumo mínimo.
+   ===================================================================== */
+
+const D2R = Math.PI/180;
+
+/* =====================================================================
+   IDIOMA Y TEMA
+   ===================================================================== */
+const I18N={"en": {"sFigs": "Mannequins", "sPoses": "Poses", "sMy": "My poses", "sPersp": "Perspective", "sLight": "Lighting", "sScene": "Scene", "sHelp": "Help", "turn": "Turn", "turnTip": "Rotate the selected mannequin", "talla": "Height", "tallaTip": "Height in centimeters", "edit": "✎ Edit joints", "hint": "Tap a point on the mannequin to edit that joint.", "addF": "Add female mannequin", "addM": "Add male mannequin", "delFig": "Remove selected mannequin", "figF": "Mannequin {n} (female)", "figM": "Mannequin {n} (male)", "mirror": "⇄ Mirror pose", "mirrorTip": "Flip the current pose left–right", "ph": "Pose name", "save": "💾 Save current pose", "exp": "⬇ Export", "imp": "⬆ Import", "note": "Stored in this browser · Export to back up.", "owq": "A pose named “{n}” already exists. Overwrite it?", "delq": "Delete pose “{n}”?", "delTip": "Delete “{n}”", "impOk": "{n} pose(s) imported.", "impNone": "The file contains no valid poses.", "impErr": "Could not read the file: not a valid pose JSON.", "fov": "Lens / FOV", "curv": "Curvilinear", "reset": "Reset camera", "ldir": "Direction", "lelev": "Elevation", "lint": "Intensity", "lamb": "Ambient", "lfill": "Fill", "shadow": "Shadow", "grid": "Grid", "sun": "Show sun", "hTitle": "Controls", "h1": "Drag: orbit camera", "h2": "Wheel / pinch: zoom", "h3": "Shift + drag (or right button): pan", "h4": "Double-click: center on active mannequin", "h5": "Drag the ground ring: move mannequin", "hudFig": "Mannequin", "hudMirror": "mirrored", "hudEdit": "EDITING", "pose.rest": "Standing (rest)", "pose.walk": "Walking", "pose.run": "Running", "pose.jump": "Jumping", "pose.squat": "Squatting", "jHead": "Head", "jNeck": "Neck", "jChest": "Chest", "jWaist": "Waist", "jPelvis": "Pelvis (global)", "jShL": "Left shoulder", "jShR": "Right shoulder", "jElL": "Left elbow", "jElR": "Right elbow", "jWrL": "Left wrist", "jWrR": "Right wrist", "jHipL": "Left hip", "jHipR": "Right hip", "jKnL": "Left knee", "jKnR": "Right knee", "jAkL": "Left ankle", "jAkR": "Right ankle", "pNod": "Nod", "pTilt": "Tilt", "pTurn": "Turn", "pBend": "Bend", "pTwist": "Twist", "pFlex": "Flex", "pAbd": "Abduct", "pRot": "Rotate", "pSide": "Side", "pPitch": "Pitch", "pRoll": "Roll", "pYaw": "Yaw", "pHeight": "Height", "sSupport": "Support", "supNote": "If ZAMU is useful to you, you can support its development:"}, "es": {"sFigs": "Maniquíes", "sPoses": "Poses", "sMy": "Mis poses", "sPersp": "Perspectiva", "sLight": "Iluminación", "sScene": "Escena", "sHelp": "Ayuda", "turn": "Giro", "turnTip": "Girar la figura seleccionada", "talla": "Talla", "tallaTip": "Estatura en centímetros", "edit": "✎ Editar articulaciones", "hint": "Toca un punto del maniquí para editar esa articulación.", "addF": "Añadir maniquí femenino", "addM": "Añadir maniquí masculino", "delFig": "Quitar el maniquí seleccionado", "figF": "Maniquí {n} (mujer)", "figM": "Maniquí {n} (hombre)", "mirror": "⇄ Espejar pose", "mirrorTip": "Invierte la pose de izquierda a derecha", "ph": "Nombre de la pose", "save": "💾 Guardar pose actual", "exp": "⬇ Exportar", "imp": "⬆ Importar", "note": "Guardadas en este navegador · Exportar para respaldar.", "owq": "Ya existe una pose llamada «{n}». ¿Sobrescribirla?", "delq": "¿Borrar la pose «{n}»?", "delTip": "Borrar «{n}»", "impOk": "Importadas {n} pose(s).", "impNone": "El archivo no contiene poses válidas.", "impErr": "No se pudo leer el archivo: no es un JSON de poses válido.", "fov": "Lente / FOV", "curv": "Curvilínea", "reset": "Restablecer cámara", "ldir": "Dirección", "lelev": "Altura", "lint": "Intensidad", "lamb": "Ambiente", "lfill": "Relleno", "shadow": "Sombra", "grid": "Cuadrícula", "sun": "Ver sol", "hTitle": "Controles", "h1": "Arrastrar: orbitar cámara", "h2": "Rueda / pellizcar: zoom", "h3": "Shift + arrastrar (o botón der.): desplazar", "h4": "Doble clic: centrar en el maniquí activo", "h5": "Arrastrar el aro del suelo: mover maniquí", "hudFig": "Maniquí", "hudMirror": "espejo", "hudEdit": "EDICIÓN", "pose.rest": "De pie (reposo)", "pose.walk": "Caminando", "pose.run": "Corriendo", "pose.jump": "Saltando", "pose.squat": "En cuclillas", "jHead": "Cabeza", "jNeck": "Cuello", "jChest": "Pecho", "jWaist": "Cintura", "jPelvis": "Pelvis (global)", "jShL": "Hombro izq", "jShR": "Hombro der", "jElL": "Codo izq", "jElR": "Codo der", "jWrL": "Muñeca izq", "jWrR": "Muñeca der", "jHipL": "Cadera izq", "jHipR": "Cadera der", "jKnL": "Rodilla izq", "jKnR": "Rodilla der", "jAkL": "Tobillo izq", "jAkR": "Tobillo der", "pNod": "Cabecear", "pTilt": "Ladear", "pTurn": "Girar", "pBend": "Flexión", "pTwist": "Torsión", "pFlex": "Flexión", "pAbd": "Abducción", "pRot": "Giro", "pSide": "Lado", "pPitch": "Inclinar", "pRoll": "Rodar", "pYaw": "Girar", "pHeight": "Altura", "sSupport": "Apoyo", "supNote": "Si ZAMU te resulta útil, puedes apoyar su desarrollo:"}, "ko": {"sFigs": "마네킹", "sPoses": "포즈", "sMy": "내 포즈", "sPersp": "원근", "sLight": "조명", "sScene": "장면", "sHelp": "도움말", "turn": "회전", "turnTip": "선택한 마네킹 회전", "talla": "신장", "tallaTip": "신장(cm)", "edit": "✎ 관절 편집", "hint": "마네킹의 점을 눌러 관절을 편집하세요.", "addF": "여성 마네킹 추가", "addM": "남성 마네킹 추가", "delFig": "선택한 마네킹 제거", "figF": "마네킹 {n} (여성)", "figM": "마네킹 {n} (남성)", "mirror": "⇄ 포즈 반전", "mirrorTip": "현재 포즈를 좌우 반전", "ph": "포즈 이름", "save": "💾 현재 포즈 저장", "exp": "⬇ 내보내기", "imp": "⬆ 가져오기", "note": "이 브라우저에 저장됨 · 백업하려면 내보내기.", "owq": "“{n}” 포즈가 이미 있습니다. 덮어쓸까요?", "delq": "“{n}” 포즈를 삭제할까요?", "delTip": "“{n}” 삭제", "impOk": "{n}개의 포즈를 가져왔습니다.", "impNone": "유효한 포즈가 없는 파일입니다.", "impErr": "파일을 읽을 수 없습니다: 유효한 포즈 JSON이 아닙니다.", "fov": "렌즈 / 시야각", "curv": "곡선 원근", "reset": "카메라 초기화", "ldir": "방향", "lelev": "고도", "lint": "강도", "lamb": "주변광", "lfill": "보조광", "shadow": "그림자", "grid": "격자", "sun": "태양 표시", "hTitle": "조작법", "h1": "드래그: 카메라 회전", "h2": "휠 / 핀치: 확대·축소", "h3": "Shift+드래그(또는 우클릭): 이동", "h4": "더블클릭: 선택 마네킹 중심으로", "h5": "바닥 링 드래그: 마네킹 이동", "hudFig": "마네킹", "hudMirror": "반전", "hudEdit": "편집 중", "pose.rest": "서기(휴식)", "pose.walk": "걷기", "pose.run": "달리기", "pose.jump": "점프", "pose.squat": "쪼그려 앉기", "jHead": "머리", "jNeck": "목", "jChest": "가슴", "jWaist": "허리", "jPelvis": "골반(전체)", "jShL": "왼쪽 어깨", "jShR": "오른쪽 어깨", "jElL": "왼쪽 팔꿈치", "jElR": "오른쪽 팔꿈치", "jWrL": "왼쪽 손목", "jWrR": "오른쪽 손목", "jHipL": "왼쪽 고관절", "jHipR": "오른쪽 고관절", "jKnL": "왼쪽 무릎", "jKnR": "오른쪽 무릎", "jAkL": "왼쪽 발목", "jAkR": "오른쪽 발목", "pNod": "끄덕임", "pTilt": "기울임", "pTurn": "돌리기", "pBend": "굽힘", "pTwist": "비틀기", "pFlex": "굽히기", "pAbd": "벌리기", "pRot": "회전", "pSide": "옆", "pPitch": "앞뒤 기울기", "pRoll": "좌우 기울기", "pYaw": "회전", "pHeight": "높이", "sSupport": "후원", "supNote": "ZAMU가 도움이 된다면 개발을 후원할 수 있어요:"}, "zh": {"sFigs": "人偶", "sPoses": "姿势", "sMy": "我的姿势", "sPersp": "透视", "sLight": "光照", "sScene": "场景", "sHelp": "帮助", "turn": "旋转", "turnTip": "旋转所选人偶", "talla": "身高", "tallaTip": "身高（厘米）", "edit": "✎ 编辑关节", "hint": "点击人偶上的圆点以编辑该关节。", "addF": "添加女性人偶", "addM": "添加男性人偶", "delFig": "移除所选人偶", "figF": "人偶 {n}（女）", "figM": "人偶 {n}（男）", "mirror": "⇄ 镜像姿势", "mirrorTip": "左右翻转当前姿势", "ph": "姿势名称", "save": "💾 保存当前姿势", "exp": "⬇ 导出", "imp": "⬆ 导入", "note": "保存在此浏览器中 · 导出以备份。", "owq": "已存在名为“{n}”的姿势。要覆盖吗？", "delq": "删除姿势“{n}”？", "delTip": "删除“{n}”", "impOk": "已导入 {n} 个姿势。", "impNone": "文件中没有有效的姿势。", "impErr": "无法读取文件：不是有效的姿势 JSON。", "fov": "镜头 / 视场", "curv": "曲线透视", "reset": "重置相机", "ldir": "方向", "lelev": "高度", "lint": "强度", "lamb": "环境光", "lfill": "补光", "shadow": "阴影", "grid": "网格", "sun": "显示太阳", "hTitle": "操作", "h1": "拖动：环绕相机", "h2": "滚轮 / 捏合：缩放", "h3": "Shift+拖动（或右键）：平移", "h4": "双击：聚焦所选人偶", "h5": "拖动底部圆环：移动人偶", "hudFig": "人偶", "hudMirror": "镜像", "hudEdit": "编辑中", "pose.rest": "站立（放松）", "pose.walk": "行走", "pose.run": "奔跑", "pose.jump": "跳跃", "pose.squat": "下蹲", "jHead": "头", "jNeck": "颈", "jChest": "胸", "jWaist": "腰", "jPelvis": "骨盆（整体）", "jShL": "左肩", "jShR": "右肩", "jElL": "左肘", "jElR": "右肘", "jWrL": "左腕", "jWrR": "右腕", "jHipL": "左髋", "jHipR": "右髋", "jKnL": "左膝", "jKnR": "右膝", "jAkL": "左踝", "jAkR": "右踝", "pNod": "点头", "pTilt": "侧倾", "pTurn": "转动", "pBend": "弯曲", "pTwist": "扭转", "pFlex": "屈曲", "pAbd": "外展", "pRot": "旋转", "pSide": "侧向", "pPitch": "前后倾", "pRoll": "侧滚", "pYaw": "旋转", "pHeight": "高度", "sSupport": "支持", "supNote": "如果 ZAMU 对你有帮助，可以支持它的开发："}, "ja": {"sFigs": "マネキン", "sPoses": "ポーズ", "sMy": "マイポーズ", "sPersp": "遠近法", "sLight": "ライティング", "sScene": "シーン", "sHelp": "ヘルプ", "turn": "回転", "turnTip": "選択中のマネキンを回転", "talla": "身長", "tallaTip": "身長（cm）", "edit": "✎ 関節を編集", "hint": "マネキン上の点をタップして関節を編集します。", "addF": "女性マネキンを追加", "addM": "男性マネキンを追加", "delFig": "選択中のマネキンを削除", "figF": "マネキン {n}（女性）", "figM": "マネキン {n}（男性）", "mirror": "⇄ ポーズを反転", "mirrorTip": "現在のポーズを左右反転", "ph": "ポーズ名", "save": "💾 現在のポーズを保存", "exp": "⬇ エクスポート", "imp": "⬆ インポート", "note": "このブラウザに保存 · バックアップはエクスポート。", "owq": "「{n}」というポーズは既にあります。上書きしますか？", "delq": "ポーズ「{n}」を削除しますか？", "delTip": "「{n}」を削除", "impOk": "{n} 件のポーズを取り込みました。", "impNone": "有効なポーズが含まれていません。", "impErr": "ファイルを読めません：有効なポーズJSONではありません。", "fov": "レンズ / 視野角", "curv": "曲線遠近法", "reset": "カメラをリセット", "ldir": "方向", "lelev": "高度", "lint": "強度", "lamb": "環境光", "lfill": "補助光", "shadow": "影", "grid": "グリッド", "sun": "太陽を表示", "hTitle": "操作", "h1": "ドラッグ：カメラ回転", "h2": "ホイール / ピンチ：ズーム", "h3": "Shift+ドラッグ（右ボタン）：平行移動", "h4": "ダブルクリック：選択マネキンを中心に", "h5": "床のリングをドラッグ：マネキン移動", "hudFig": "マネキン", "hudMirror": "反転", "hudEdit": "編集中", "pose.rest": "立ち（休め）", "pose.walk": "歩き", "pose.run": "走り", "pose.jump": "ジャンプ", "pose.squat": "しゃがみ", "jHead": "頭", "jNeck": "首", "jChest": "胸", "jWaist": "腰", "jPelvis": "骨盤（全体）", "jShL": "左肩", "jShR": "右肩", "jElL": "左肘", "jElR": "右肘", "jWrL": "左手首", "jWrR": "右手首", "jHipL": "左股関節", "jHipR": "右股関節", "jKnL": "左膝", "jKnR": "右膝", "jAkL": "左足首", "jAkR": "右足首", "pNod": "うなずき", "pTilt": "傾げ", "pTurn": "回す", "pBend": "曲げ", "pTwist": "ひねり", "pFlex": "屈曲", "pAbd": "外転", "pRot": "回旋", "pSide": "横", "pPitch": "前後傾", "pRoll": "横転", "pYaw": "回転", "pHeight": "高さ", "sSupport": "サポート", "supNote": "ZAMUが役に立ったら、開発を支援できます："}, "de": {"sFigs": "Mannequins", "sPoses": "Posen", "sMy": "Meine Posen", "sPersp": "Perspektive", "sLight": "Beleuchtung", "sScene": "Szene", "sHelp": "Hilfe", "turn": "Drehung", "turnTip": "Ausgewähltes Mannequin drehen", "talla": "Größe", "tallaTip": "Körpergröße in Zentimetern", "edit": "✎ Gelenke bearbeiten", "hint": "Tippe einen Punkt am Mannequin an, um das Gelenk zu bearbeiten.", "addF": "Weibliches Mannequin hinzufügen", "addM": "Männliches Mannequin hinzufügen", "delFig": "Ausgewähltes Mannequin entfernen", "figF": "Mannequin {n} (weiblich)", "figM": "Mannequin {n} (männlich)", "mirror": "⇄ Pose spiegeln", "mirrorTip": "Aktuelle Pose links–rechts spiegeln", "ph": "Name der Pose", "save": "💾 Aktuelle Pose speichern", "exp": "⬇ Exportieren", "imp": "⬆ Importieren", "note": "Im Browser gespeichert · zum Sichern exportieren.", "owq": "Eine Pose namens „{n}“ existiert bereits. Überschreiben?", "delq": "Pose „{n}“ löschen?", "delTip": "„{n}“ löschen", "impOk": "{n} Pose(n) importiert.", "impNone": "Die Datei enthält keine gültigen Posen.", "impErr": "Datei nicht lesbar: kein gültiges Posen-JSON.", "fov": "Objektiv / FOV", "curv": "Kurvilinear", "reset": "Kamera zurücksetzen", "ldir": "Richtung", "lelev": "Höhe", "lint": "Intensität", "lamb": "Umgebung", "lfill": "Aufhellung", "shadow": "Schatten", "grid": "Raster", "sun": "Sonne anzeigen", "hTitle": "Steuerung", "h1": "Ziehen: Kamera orbitieren", "h2": "Rad / Pinch: Zoom", "h3": "Shift + Ziehen (o. rechte Taste): Verschieben", "h4": "Doppelklick: aktives Mannequin zentrieren", "h5": "Bodenring ziehen: Mannequin bewegen", "hudFig": "Mannequin", "hudMirror": "gespiegelt", "hudEdit": "BEARBEITUNG", "pose.rest": "Stehend (Ruhe)", "pose.walk": "Gehen", "pose.run": "Laufen", "pose.jump": "Springen", "pose.squat": "Hocke", "jHead": "Kopf", "jNeck": "Hals", "jChest": "Brust", "jWaist": "Taille", "jPelvis": "Becken (global)", "jShL": "Linke Schulter", "jShR": "Rechte Schulter", "jElL": "Linker Ellbogen", "jElR": "Rechter Ellbogen", "jWrL": "Linkes Handgelenk", "jWrR": "Rechtes Handgelenk", "jHipL": "Linke Hüfte", "jHipR": "Rechte Hüfte", "jKnL": "Linkes Knie", "jKnR": "Rechtes Knie", "jAkL": "Linker Knöchel", "jAkR": "Rechter Knöchel", "pNod": "Nicken", "pTilt": "Neigen", "pTurn": "Drehen", "pBend": "Beugen", "pTwist": "Verdrehen", "pFlex": "Beugung", "pAbd": "Abspreizen", "pRot": "Rotation", "pSide": "Seite", "pPitch": "Kippen", "pRoll": "Rollen", "pYaw": "Drehung", "pHeight": "Höhe", "sSupport": "Unterstützung", "supNote": "Wenn ZAMU dir hilft, kannst du die Entwicklung unterstützen:"}, "fr": {"sFigs": "Mannequins", "sPoses": "Poses", "sMy": "Mes poses", "sPersp": "Perspective", "sLight": "Éclairage", "sScene": "Scène", "sHelp": "Aide", "turn": "Rotation", "turnTip": "Faire pivoter le mannequin sélectionné", "talla": "Taille", "tallaTip": "Taille en centimètres", "edit": "✎ Modifier les articulations", "hint": "Touchez un point du mannequin pour modifier cette articulation.", "addF": "Ajouter un mannequin féminin", "addM": "Ajouter un mannequin masculin", "delFig": "Retirer le mannequin sélectionné", "figF": "Mannequin {n} (femme)", "figM": "Mannequin {n} (homme)", "mirror": "⇄ Miroir de la pose", "mirrorTip": "Inverser la pose gauche–droite", "ph": "Nom de la pose", "save": "💾 Enregistrer la pose actuelle", "exp": "⬇ Exporter", "imp": "⬆ Importer", "note": "Enregistrées dans ce navigateur · Exporter pour sauvegarder.", "owq": "Une pose nommée « {n} » existe déjà. La remplacer ?", "delq": "Supprimer la pose « {n} » ?", "delTip": "Supprimer « {n} »", "impOk": "{n} pose(s) importée(s).", "impNone": "Le fichier ne contient aucune pose valide.", "impErr": "Lecture impossible : JSON de poses invalide.", "fov": "Objectif / FOV", "curv": "Curviligne", "reset": "Réinitialiser la caméra", "ldir": "Direction", "lelev": "Hauteur", "lint": "Intensité", "lamb": "Ambiante", "lfill": "Appoint", "shadow": "Ombre", "grid": "Grille", "sun": "Afficher le soleil", "hTitle": "Commandes", "h1": "Glisser : orbiter la caméra", "h2": "Molette / pincer : zoom", "h3": "Maj + glisser (ou clic droit) : déplacer", "h4": "Double-clic : centrer le mannequin actif", "h5": "Glisser l'anneau au sol : déplacer le mannequin", "hudFig": "Mannequin", "hudMirror": "miroir", "hudEdit": "ÉDITION", "pose.rest": "Debout (repos)", "pose.walk": "Marche", "pose.run": "Course", "pose.jump": "Saut", "pose.squat": "Accroupi", "jHead": "Tête", "jNeck": "Cou", "jChest": "Poitrine", "jWaist": "Taille", "jPelvis": "Bassin (global)", "jShL": "Épaule gauche", "jShR": "Épaule droite", "jElL": "Coude gauche", "jElR": "Coude droit", "jWrL": "Poignet gauche", "jWrR": "Poignet droit", "jHipL": "Hanche gauche", "jHipR": "Hanche droite", "jKnL": "Genou gauche", "jKnR": "Genou droit", "jAkL": "Cheville gauche", "jAkR": "Cheville droite", "pNod": "Hocher", "pTilt": "Incliner", "pTurn": "Tourner", "pBend": "Fléchir", "pTwist": "Torsion", "pFlex": "Flexion", "pAbd": "Abduction", "pRot": "Rotation", "pSide": "Côté", "pPitch": "Tangage", "pRoll": "Roulis", "pYaw": "Lacet", "pHeight": "Hauteur", "sSupport": "Soutien", "supNote": "Si ZAMU vous est utile, vous pouvez soutenir son développement :"}};
+let lang='en';
+try{ lang=localStorage.getItem('zamu.lang')||'en'; }catch(e){}
+if(!I18N[lang]) lang='en';
+function T(k){ return (I18N[lang]&&I18N[lang][k]) || I18N.en[k] || k; }
+let theme='dark';
+try{ theme=localStorage.getItem('zamu.theme')||'dark'; }catch(e){}
+if(theme!=='light') theme='dark';
+const THEMES={
+  dark:{bg0:'#231E18', bg1:'#171310', grid:'rgba(200,184,158,', inact:'rgba(154,144,131,0.4)',
+        acc:'rgba(200,90,64,', dot:'rgba(224,124,94,', dotSel:'rgba(244,158,128,1)',
+        outline:'rgba(23,18,13,0.9)', shadowA:0.30, sun:'rgba(216,116,88,0.95)'},
+  light:{bg0:'#F2EEE7', bg1:'#DDD5C6', grid:'rgba(94,84,66,', inact:'rgba(110,105,95,0.45)',
+        acc:'rgba(139,58,47,', dot:'rgba(139,58,47,', dotSel:'rgba(163,74,59,1)',
+        outline:'rgba(248,245,239,0.95)', shadowA:0.18, sun:'rgba(139,58,47,0.85)'},
+};
+
+/* ---------- álgebra 3x3 (filas) ---------- */
+function mulM(a,b){
+  return [
+    a[0]*b[0]+a[1]*b[3]+a[2]*b[6], a[0]*b[1]+a[1]*b[4]+a[2]*b[7], a[0]*b[2]+a[1]*b[5]+a[2]*b[8],
+    a[3]*b[0]+a[4]*b[3]+a[5]*b[6], a[3]*b[1]+a[4]*b[4]+a[5]*b[7], a[3]*b[2]+a[4]*b[5]+a[5]*b[8],
+    a[6]*b[0]+a[7]*b[3]+a[8]*b[6], a[6]*b[1]+a[7]*b[4]+a[8]*b[7], a[6]*b[2]+a[7]*b[5]+a[8]*b[8]];
+}
+function rotX(a){a*=D2R;const c=Math.cos(a),s=Math.sin(a);return [1,0,0, 0,c,-s, 0,s,c];}
+function rotY(a){a*=D2R;const c=Math.cos(a),s=Math.sin(a);return [c,0,s, 0,1,0, -s,0,c];}
+function rotZ(a){a*=D2R;const c=Math.cos(a),s=Math.sin(a);return [c,-s,0, s,c,0, 0,0,1];}
+const I3 = [1,0,0, 0,1,0, 0,0,1];
+
+/* =====================================================================
+   GEOMETRÍA — primitivas por hueso:
+   - elipsoides {c,s} con rotación opcional rot:[rx,ry,rz]
+   - lofts {loft:[[y,rx,rz,cx,cz],...]} de arriba a abajo, sección
+     elíptica con centro desplazable → superficies continuas.
+   Radios empatados entre segmentos para que las uniones fluyan.
+   ===================================================================== */
+const BONES_DEF_F = [
+  {n:'root', p:null, o:[0,0,0], prims:[
+    {loft:[
+      [0.118,0.106,0.087, 0, 0.005],
+      [0.062,0.126,0.098, 0, 0.004],
+      [0.010,0.144,0.110, 0, 0.002],
+      [-0.038,0.150,0.112, 0, -0.002],
+      [-0.075,0.142,0.106, 0, -0.004],
+      [-0.115,0.094,0.086, 0, 0.008]
+    ], capB:true},
+    {loft:[
+      [0.068,0.048,0.054],
+      [0.048,0.066,0.073],
+      [0.015,0.077,0.084],
+      [-0.025,0.078,0.084],
+      [-0.065,0.060,0.066]
+    ], capT:true, capB:true, rot:[-102,-6,-4], c:[ 0.062,-0.075,-0.056]},
+    {loft:[
+      [0.068,0.048,0.054],
+      [0.048,0.066,0.073],
+      [0.015,0.077,0.084],
+      [-0.025,0.078,0.084],
+      [-0.065,0.060,0.066]
+    ], capT:true, capB:true, rot:[-102, 6, 4], c:[-0.062,-0.075,-0.056]},
+    {c:[ 0.108,-0.068, 0.005], s:[0.050,0.082,0.070]},
+    {c:[-0.108,-0.068, 0.005], s:[0.050,0.082,0.070]},
+  ]},
+  {n:'spine', p:'root', o:[0,0.095,0], prims:[
+    {loft:[
+      [0.155,0.113,0.091, 0, 0.015],
+      [0.120,0.100,0.084, 0, 0.010],
+      [0.090,0.095,0.081, 0, 0.006],
+      [0.040,0.106,0.087, 0, 0.002],
+      [-0.015,0.110,0.089, 0, 0.005]
+    ]},
+  ]},
+  {n:'chest', p:'spine', o:[0,0.157,0], prims:[
+    {loft:[
+      [0.225,0.097,0.077, 0, -0.006],
+      [0.190,0.119,0.089, 0, -0.005],
+      [0.150,0.129,0.097, 0, -0.002],
+      [0.100,0.130,0.099, 0, 0.001],
+      [0.045,0.121,0.095, 0, 0.003],
+      [-0.030,0.110,0.089, 0, 0.004]
+    ], capT:true},
+    {loft:[
+      [0.070,0.014,0.014, 0, 0],
+      [0.050,0.040,0.038, 0, 0],
+      [0.020,0.057,0.053, 0, 0],
+      [-0.010,0.061,0.056, 0, 0],
+      [-0.040,0.051,0.049, 0, 0]
+    ], capT:true, rot:[98, 13, 0], c:[ 0.055,0.071,0.068]},
+    {loft:[
+      [0.070,0.014,0.014, 0, 0],
+      [0.050,0.040,0.038, 0, 0],
+      [0.020,0.057,0.053, 0, 0],
+      [-0.010,0.061,0.056, 0, 0],
+      [-0.040,0.051,0.049, 0, 0]
+    ], capT:true, rot:[98,-13, 0], c:[-0.055,0.071,0.068]},
+    {c:[ 0.047,0.118,0.052], s:[0.052,0.040,0.046], rot:[-25, 10, 0]},
+    {c:[-0.047,0.118,0.052], s:[0.052,0.040,0.046], rot:[-25,-10, 0]},
+  ]},
+  {n:'neck', p:'chest', o:[0,0.20,0], prims:[
+    {loft:[
+      [0.122,0.034,0.033, 0, 0.010],
+      [0.050,0.036,0.035, 0, 0.012],
+      [-0.010,0.053,0.050, 0, 0.006]
+    ]},
+  ]},
+  {n:'head', p:'neck', o:[0,0.103,0], prims:[
+    {c:[0,0.099,-0.009], s:[0.085,0.106,0.097]},
+    {loft:[
+      [0.096,0.070,0.076, 0, 0.014],
+      [0.051,0.060,0.064, 0, 0.025],
+      [0.014,0.040,0.044, 0, 0.034],
+      [-0.014,0.021,0.024, 0, 0.041]
+    ], capB:true},
+    {c:[0,0.062,0.104], s:[0.016,0.027,0.021]},
+    {c:[ 0.032,0.092,0.078], s:[0.012,0.007,0.007], tint:0.5},
+    {c:[-0.032,0.092,0.078], s:[0.012,0.007,0.007], tint:0.5},
+  ]},
+  {n:'shL', p:'chest', o:[0.150,0.158,0], prims:[
+    {c:[0.008,-0.012,0], s:[0.052,0.058,0.050]},
+    {loft:[
+      [-0.029,0.040,0.040, 0, 0.002],
+      [-0.105,0.044,0.042, 0, 0.008],
+      [-0.200,0.038,0.036, 0, 0.004],
+      [-0.316,0.028,0.028, 0, 0.000]
+    ]},
+  ]},
+  {n:'elbL', p:'shL', o:[0,-0.305,0], prims:[
+    {c:[0,-0.008,0], s:[0.030,0.035,0.030]},
+    {loft:[
+      [-0.012,0.028,0.028, 0, 0.000],
+      [-0.069,0.034,0.030, 0, -0.002],
+      [-0.147,0.028,0.026, 0, -0.002],
+      [-0.216,0.022,0.020, 0, 0.001],
+      [-0.263,0.017,0.018, 0, 0.002]
+    ]},
+  ]},
+  {n:'wrL', p:'elbL', o:[0,-0.26,0], prims:[
+    {loft:[
+      [0.000,0.022,0.014, 0, 0.002],
+      [-0.045,0.033,0.014, 0, 0.006],
+      [-0.090,0.029,0.012, 0, 0.010],
+      [-0.130,0.023,0.010, 0, 0.014],
+      [-0.163,0.011,0.007, 0, 0.016]
+    ], capB:true},
+  ]},
+  {n:'hipL', p:'root', o:[0.093,-0.045,0], prims:[
+    {c:[0,-0.025,0], s:[0.073,0.093,0.079]},
+    {loft:[
+      [-0.027,0.080,0.084, 0.010, 0.004],
+      [-0.131,0.084,0.088, 0.005, 0.012],
+      [-0.251,0.080,0.090, 0.000, 0.016],
+      [-0.371,0.064,0.066,-0.005, 0.008],
+      [-0.496,0.052,0.054,-0.010, 0.002]
+    ]},
+  ]},
+  {n:'kneeL', p:'hipL', o:[0,-0.48,0], prims:[
+    {c:[0,-0.012,0.006], s:[0.041,0.052,0.043]},
+    {loft:[
+      [-0.014,0.040,0.042, 0, 0.002],
+      [-0.064,0.045,0.049, 0, -0.008],
+      [-0.119,0.050,0.058, 0, -0.022],
+      [-0.211,0.035,0.037, 0, -0.012],
+      [-0.303,0.024,0.026, 0, -0.005],
+      [-0.399,0.020,0.021, 0, 0.001]
+    ]},
+  ]},
+  {n:'ankL', p:'kneeL', o:[0,-0.385,0], prims:[
+    {c:[0,-0.012,-0.016], s:[0.026,0.032,0.032]},
+    {loft:[
+      [0.000,0.024,0.032, 0, 0.006],
+      [-0.022,0.028,0.055, 0, 0.030],
+      [-0.042,0.027,0.080, 0, 0.058],
+      [-0.064,0.024,0.110, 0, 0.080]
+    ], capB:true},
+  ]},
+];
+/* ---------- esqueleto masculino ---------- */
+const BONES_DEF_M = [
+  {n:'root', p:null, o:[0,0,0], prims:[
+    {loft:[
+      [0.118,0.104,0.090, 0, 0.005],
+      [0.062,0.116,0.098, 0, 0.004],
+      [0.010,0.124,0.104, 0, 0.002],
+      [-0.038,0.126,0.106, 0, -0.002],
+      [-0.075,0.120,0.102, 0, -0.004],
+      [-0.115,0.088,0.084, 0, 0.008]
+    ], capB:true},
+    // glúteos masculinos: más planos y compactos
+    {loft:[
+      [0.055,0.044,0.050],
+      [0.038,0.058,0.064],
+      [0.008,0.066,0.072],
+      [-0.026,0.066,0.070],
+      [-0.058,0.050,0.056]
+    ], capT:true, capB:true, rot:[-100,-5,-3], c:[ 0.056,-0.075,-0.046]},
+    {loft:[
+      [0.055,0.044,0.050],
+      [0.038,0.058,0.064],
+      [0.008,0.066,0.072],
+      [-0.026,0.066,0.070],
+      [-0.058,0.050,0.056]
+    ], capT:true, capB:true, rot:[-100, 5, 3], c:[-0.056,-0.075,-0.046]},
+  ]},
+  {n:'spine', p:'root', o:[0,0.095,0], prims:[
+    // torso recto, sin pinza de cintura
+    {loft:[
+      [0.155,0.120,0.097, 0, 0.012],
+      [0.120,0.114,0.093, 0, 0.008],
+      [0.090,0.111,0.091, 0, 0.005],
+      [0.040,0.112,0.092, 0, 0.002],
+      [-0.015,0.114,0.094, 0, 0.005]
+    ]},
+  ]},
+  {n:'chest', p:'spine', o:[0,0.157,0], prims:[
+    // caja torácica ancha en V
+    {loft:[
+      [0.225,0.120,0.086, 0, -0.006],
+      [0.190,0.144,0.098, 0, -0.005],
+      [0.150,0.152,0.104, 0, -0.002],
+      [0.100,0.147,0.102, 0, 0.001],
+      [0.045,0.133,0.098, 0, 0.003],
+      [-0.030,0.117,0.092, 0, 0.004]
+    ], capT:true},
+    // pectorales planos
+    {c:[ 0.058,0.085,0.082], s:[0.058,0.050,0.028], rot:[-12, 8, 0]},
+    {c:[-0.058,0.085,0.082], s:[0.058,0.050,0.028], rot:[-12,-8, 0]},
+    // trapecios
+    {c:[ 0.068,0.200,-0.005], s:[0.058,0.032,0.044], rot:[0,0,-18]},
+    {c:[-0.068,0.200,-0.005], s:[0.058,0.032,0.044], rot:[0,0, 18]},
+  ]},
+  {n:'neck', p:'chest', o:[0,0.20,0], prims:[
+    {loft:[
+      [0.122,0.043,0.041, 0, 0.008],
+      [0.050,0.045,0.043, 0, 0.008],
+      [-0.010,0.062,0.058, 0, 0.003]
+    ]},
+  ]},
+  {n:'head', p:'neck', o:[0,0.105,0], prims:[
+    {c:[0,0.098,-0.007], s:[0.085,0.105,0.096]},
+    // mandíbula cuadrada
+    {loft:[
+      [0.093,0.074,0.079, 0, 0.011],
+      [0.049,0.068,0.070, 0, 0.022],
+      [0.011,0.053,0.055, 0, 0.028],
+      [-0.015,0.033,0.035, 0, 0.033]
+    ], capB:true},
+    {c:[0,0.058,0.107], s:[0.016,0.028,0.022]},
+    {c:[ 0.031,0.092,0.077], s:[0.012,0.007,0.007], tint:0.5},
+    {c:[-0.031,0.092,0.077], s:[0.012,0.007,0.007], tint:0.5},
+  ]},
+  {n:'shL', p:'chest', o:[0.175,0.155,0], prims:[
+    {c:[0.012,-0.012,0], s:[0.060,0.064,0.058]},
+    {loft:[
+      [-0.029,0.046,0.046, 0, 0.002],
+      [-0.098,0.050,0.048, 0, 0.008],
+      [-0.187,0.043,0.041, 0, 0.004],
+      [-0.295,0.033,0.033, 0, 0.000]
+    ]},
+  ]},
+  {n:'elbL', p:'shL', o:[0,-0.285,0], prims:[
+    {c:[0,-0.008,0], s:[0.034,0.040,0.034]},
+    {loft:[
+      [-0.011,0.033,0.033, 0, 0.000],
+      [-0.065,0.040,0.036, 0, -0.002],
+      [-0.139,0.033,0.030, 0, -0.002],
+      [-0.203,0.026,0.024, 0, 0.001],
+      [-0.248,0.021,0.022, 0, 0.002]
+    ]},
+  ]},
+  {n:'wrL', p:'elbL', o:[0,-0.245,0], prims:[
+    {loft:[
+      [0.000,0.025,0.016, 0, 0.002],
+      [-0.047,0.037,0.016, 0, 0.006],
+      [-0.094,0.033,0.013, 0, 0.010],
+      [-0.137,0.026,0.011, 0, 0.014],
+      [-0.170,0.012,0.008, 0, 0.016]
+    ], capB:true},
+  ]},
+  {n:'hipL', p:'root', o:[0.086,-0.045,0], prims:[
+    {c:[0,-0.025,0], s:[0.070,0.090,0.076]},
+    {loft:[
+      [-0.027,0.078,0.082, 0.008, 0.004],
+      [-0.131,0.080,0.084, 0.004, 0.010],
+      [-0.251,0.074,0.082, 0.000, 0.012],
+      [-0.371,0.062,0.064,-0.004, 0.006],
+      [-0.496,0.052,0.054,-0.008, 0.002]
+    ]},
+  ]},
+  {n:'kneeL', p:'hipL', o:[0,-0.48,0], prims:[
+    {c:[0,-0.012,0.006], s:[0.044,0.054,0.046]},
+    {loft:[
+      [-0.014,0.042,0.044, 0, 0.002],
+      [-0.064,0.048,0.052, 0, -0.008],
+      [-0.119,0.053,0.060, 0, -0.020],
+      [-0.211,0.038,0.040, 0, -0.011],
+      [-0.303,0.027,0.029, 0, -0.005],
+      [-0.399,0.023,0.024, 0, 0.001]
+    ]},
+  ]},
+  {n:'ankL', p:'kneeL', o:[0,-0.385,0], prims:[
+    {c:[0,-0.012,-0.016], s:[0.028,0.034,0.034]},
+    {loft:[
+      [0.000,0.027,0.034, 0, 0.006],
+      [-0.022,0.031,0.062, 0, 0.032],
+      [-0.042,0.029,0.090, 0, 0.062],
+      [-0.064,0.026,0.120, 0, 0.086]
+    ], capB:true},
+  ]},
+];
+
+// genera el lado derecho espejando X (se aplica a cada esqueleto)
+function mirrorDef(def){
+  const L = def.filter(b=>b.n.endsWith('L'));
+  for(const b of L){
+    def.push({
+      n: b.n.slice(0,-1)+'R',
+      p: b.p.endsWith('L') ? b.p.slice(0,-1)+'R' : b.p,
+      o: [-b.o[0], b.o[1], b.o[2]],
+      prims: b.prims.map(pr=> pr.loft
+        ? {loft:pr.loft.map(r=>[r[0],r[1],r[2],-(r[3]||0),r[4]||0]), capT:pr.capT, capB:pr.capB, tint:pr.tint,
+           rot:pr.rot ? [pr.rot[0],-pr.rot[1],-pr.rot[2]] : undefined,
+           c:pr.c ? [-pr.c[0],pr.c[1],pr.c[2]] : undefined}
+        : {c:[-pr.c[0],pr.c[1],pr.c[2]], s:pr.s.slice(), tint:pr.tint,
+           rot:pr.rot ? [pr.rot[0],-pr.rot[1],-pr.rot[2]] : undefined})
+    });
+  }
+}
+mirrorDef(BONES_DEF_F);
+mirrorDef(BONES_DEF_M);
+
+/* ---------- teselación ---------- */
+const SEG=16, RING=11;
+const SPH_V=[], SPH_T=[];
+(function buildSphere(){
+  SPH_V.push([0,1,0]);
+  for(let i=1;i<RING;i++){
+    const th=Math.PI*i/RING, st=Math.sin(th), ct=Math.cos(th);
+    for(let j=0;j<SEG;j++){
+      const ph=2*Math.PI*j/SEG;
+      SPH_V.push([st*Math.sin(ph), ct, st*Math.cos(ph)]);
+    }
+  }
+  SPH_V.push([0,-1,0]);
+  const last=SPH_V.length-1;
+  const idx=(i,j)=>1+(i-1)*SEG+(j%SEG);
+  for(let j=0;j<SEG;j++) SPH_T.push([0, idx(1,j), idx(1,j+1)]);
+  for(let i=1;i<RING-1;i++)
+    for(let j=0;j<SEG;j++){
+      SPH_T.push([idx(i,j), idx(i+1,j), idx(i+1,j+1)]);
+      SPH_T.push([idx(i,j), idx(i+1,j+1), idx(i,j+1)]);
+    }
+  for(let j=0;j<SEG;j++) SPH_T.push([last, idx(RING-1,j+1), idx(RING-1,j)]);
+})();
+
+// suaviza el perfil insertando anillos interpolados (Catmull-Rom simple)
+function densify(rings){
+  if(rings.length<3) return rings;
+  const out=[];
+  for(let i=0;i<rings.length-1;i++){
+    const a=rings[Math.max(0,i-1)], b=rings[i], c=rings[i+1], d=rings[Math.min(rings.length-1,i+2)];
+    out.push(b);
+    const mid=[];
+    for(let k=0;k<5;k++){
+      const vb=b[k]||0, vc=c[k]||0, va=a[k]||0, vd=d[k]||0;
+      mid.push(vb+0.5*(vc-va)*0.25 + 0.5*(vc-vb) - 0.5*(vd-vb)*0.25*0); // Catmull t=0.5 simplificado
+    }
+    // Catmull-Rom en t=0.5: -a/16 + 9b/16 + 9c/16 - d/16
+    for(let k=0;k<5;k++){
+      const va=a[k]||0, vb=b[k]||0, vc=c[k]||0, vd=d[k]||0;
+      mid[k]= -va/16 + 9*vb/16 + 9*vc/16 - vd/16;
+    }
+    out.push(mid);
+  }
+  out.push(rings[rings.length-1]);
+  return out;
+}
+
+function lathe(rings, capT, capB){
+  rings=densify(rings);
+  const V=[], T=[];
+  const n=rings.length;
+  for(const r of rings){
+    const [y,rx,rz,cx,cz]=[r[0],r[1],r[2],r[3]||0,r[4]||0];
+    for(let j=0;j<SEG;j++){
+      const a=2*Math.PI*j/SEG;
+      V.push([cx+rx*Math.cos(a), y, cz+rz*Math.sin(a)]);
+    }
+  }
+  const id=(i,j)=>i*SEG+(j%SEG);
+  for(let i=0;i<n-1;i++)
+    for(let j=0;j<SEG;j++){
+      T.push([id(i,j), id(i,j+1), id(i+1,j)]);
+      T.push([id(i,j+1), id(i+1,j+1), id(i+1,j)]);
+    }
+  if(capT){
+    const r=rings[0], c=V.length; V.push([r[3]||0, r[0], r[4]||0]);
+    for(let j=0;j<SEG;j++) T.push([c, id(0,j+1), id(0,j)]);
+  }
+  if(capB){
+    const r=rings[n-1], c=V.length; V.push([r[3]||0, r[0], r[4]||0]);
+    for(let j=0;j<SEG;j++) T.push([c, id(n-1,j), id(n-1,j+1)]);
+  }
+  return {V,T};
+}
+
+/* ---------- horneado ---------- */
+function bakeSet(def){
+  const bones={};
+  const TRIS=[], TINTS=[];
+  let NV=0;
+  for(const bd of def){
+    const loc=[], discs=[];
+    const vStart=NV;
+    for(const pr of bd.prims){
+      const base=NV, tint=pr.tint||1;
+      if(pr.loft){
+        const g=lathe(pr.loft, pr.capT, pr.capB);
+        let R=null;
+        if(pr.rot) R=mulM(rotZ(pr.rot[2]), mulM(rotY(pr.rot[1]), rotX(pr.rot[0])));
+        const off=pr.c||[0,0,0];
+        for(const v of g.V){
+          let x=v[0], y=v[1], z=v[2];
+          if(R){
+            const x2=R[0]*x+R[1]*y+R[2]*z, y2=R[3]*x+R[4]*y+R[5]*z, z2=R[6]*x+R[7]*y+R[8]*z;
+            x=x2; y=y2; z=z2;
+          }
+          loc.push(off[0]+x, off[1]+y, off[2]+z); NV++;
+        }
+        for(const t of g.T){ TRIS.push(base+t[0], base+t[1], base+t[2]); TINTS.push(tint); }
+        for(let i=0;i<pr.loft.length-1;i++){
+          const a=pr.loft[i], b=pr.loft[i+1];
+          let dc=[((a[3]||0)+(b[3]||0))/2,(a[0]+b[0])/2,((a[4]||0)+(b[4]||0))/2];
+          if(R) dc=[R[0]*dc[0]+R[1]*dc[1]+R[2]*dc[2], R[3]*dc[0]+R[4]*dc[1]+R[5]*dc[2], R[6]*dc[0]+R[7]*dc[1]+R[8]*dc[2]];
+          discs.push({c:[dc[0]+off[0],dc[1]+off[1],dc[2]+off[2]],
+                      r:(a[1]+a[2]+b[1]+b[2])/4});
+        }
+      } else {
+        let R=null;
+        if(pr.rot) R=mulM(rotZ(pr.rot[2]), mulM(rotY(pr.rot[1]), rotX(pr.rot[0])));
+        for(const v of SPH_V){
+          let x=v[0]*pr.s[0], y=v[1]*pr.s[1], z=v[2]*pr.s[2];
+          if(R){
+            const x2=R[0]*x+R[1]*y+R[2]*z, y2=R[3]*x+R[4]*y+R[5]*z, z2=R[6]*x+R[7]*y+R[8]*z;
+            x=x2; y=y2; z=z2;
+          }
+          loc.push(pr.c[0]+x, pr.c[1]+y, pr.c[2]+z);
+          NV++;
+        }
+        for(const t of SPH_T){
+          let a=base+t[0], b=base+t[1], c=base+t[2];
+          const ax=loc[(a-vStart)*3]-pr.c[0], ay=loc[(a-vStart)*3+1]-pr.c[1], az=loc[(a-vStart)*3+2]-pr.c[2];
+          const e1x=loc[(b-vStart)*3]-loc[(a-vStart)*3], e1y=loc[(b-vStart)*3+1]-loc[(a-vStart)*3+1], e1z=loc[(b-vStart)*3+2]-loc[(a-vStart)*3+2];
+          const e2x=loc[(c-vStart)*3]-loc[(a-vStart)*3], e2y=loc[(c-vStart)*3+1]-loc[(a-vStart)*3+1], e2z=loc[(c-vStart)*3+2]-loc[(a-vStart)*3+2];
+          const nx=e1y*e2z-e1z*e2y, ny=e1z*e2x-e1x*e2z, nz=e1x*e2y-e1y*e2x;
+          if(nx*ax+ny*ay+nz*az<0){const tmp=b;b=c;c=tmp;}
+          TRIS.push(a,b,c); TINTS.push(tint);
+        }
+        discs.push({c:pr.c, r:(pr.s[0]+pr.s[1]+pr.s[2])/3});
+      }
+    }
+    bones[bd.n]={p:bd.p, o:bd.o, vStart, vCount:NV-vStart, local:new Float32Array(loc), discs};
+  }
+  return {bones, TRI:new Int32Array(TRIS), TINT:new Float32Array(TINTS), NV, NT:TRIS.length/3};
+}
+const GEO={ F: bakeSet(BONES_DEF_F), M: bakeSet(BONES_DEF_M) };
+const NVmax=Math.max(GEO.F.NV, GEO.M.NV);
+const NTmax=Math.max(GEO.F.NT, GEO.M.NT);
+const BONE_ORDER=['root','spine','chest','neck','head','shL','elbL','wrL','shR','elbR','wrR','hipL','kneeL','ankL','hipR','kneeR','ankR'];
+
+/* ---------- buffers para hasta MAXF maniquíes ---------- */
+const MAXF=10;
+const world=new Float32Array(MAXF*NVmax*3);
+const scrX=new Float32Array(MAXF*NVmax), scrY=new Float32Array(MAXF*NVmax), scrZ=new Float32Array(MAXF*NVmax);
+const order=new Int32Array(MAXF*NTmax), depth=new Float32Array(MAXF*NTmax),
+      shade=new Float32Array(MAXF*NTmax), shTint=new Float32Array(MAXF*NTmax);
+
+/* =====================================================================
+   POSES — parámetros en grados.
+   F=flexión(+adelante/arriba), A=abducción(+afuera), T=torsión,
+   B=inclinación adelante, S=inclinación lateral (+izq del maniquí).
+   ===================================================================== */
+const BASE = {
+  px:0, py:0.99, pz:0, pitch:0, yaw:0, roll:0,
+  spB:0,spS:0,spT:0, chB:0,chS:0,chT:0, nkB:0,nkS:0,nkT:0, hdB:0,hdS:0,hdT:0,
+  shLF:0,shLA:8,shLT:0, elLF:12,elLT:0, wrLF:0,wrLS:0,
+  shRF:0,shRA:8,shRT:0, elRF:12,elRT:0, wrRF:0,wrRS:0,
+  hpLF:0,hpLA:0,hpLT:0, knLF:3, akLF:0,akLS:0,
+  hpRF:0,hpRA:0,hpRT:0, knRF:3, akRF:0,akRS:0,
+};
+
+const POSES = [
+ // reposo de pie, relajado
+ {k:'pose.rest', p:{shLA:9, shRA:9, elLF:14, elRF:14, hpLA:1, hpRA:1}},
+ // ciclo de caminata
+ {k:'pose.walk', p:{hpLF:24, knLF:10, akLF:-6, hpRF:-14, knRF:32, akRF:22,
+   shLF:-16, shRF:20, elRF:28, elLF:14, spT:4, chT:-8, py:0.98, pitch:3}},
+ // carrera
+ {k:'pose.run', p:{hpLF:58, knLF:60, akLF:10, hpRF:-26, knRF:95, akRF:28,
+   shLF:-38, elLF:65, shRF:48, elRF:98, spT:6, chT:-12, pitch:14, py:0.995, nkB:-6}},
+ // salto con brazos arriba
+ {k:'pose.jump', p:{py:1.325, hpLF:42, knLF:75, akLF:28, hpRF:36, knRF:68, akRF:32,
+   shLA:155, shRA:135, elLF:15, elRF:25, nkB:-10, hdB:-6, chB:-6, pitch:4}},
+ // cuclillas
+ {k:'pose.squat', p:{py:0.42, hpLF:92, hpRF:92, hpLA:16, hpRA:16, knLF:112, knRF:112,
+   akLF:22, akRF:22, pitch:14, spB:8, shLF:42, shRF:42, elLF:32, elRF:32,
+   nkB:-14, hdB:-6}},
+];
+
+/* ---------- espejo de pose ---------- */
+function mirrorPose(p){
+  const q={};
+  const swap=k=>k.replace(/L/, '_').replace(/R/,'L').replace(/_/,'R');
+  for(const k in p){
+    if(/^(sh|el|wr|hp|kn|ak)[LR]/.test(k)) q[swap(k)]=p[k];
+    else q[k]=p[k];
+  }
+  const neg=['px','yaw','roll','spS','spT','chS','chT','nkS','nkT','hdS','hdT'];
+  for(const k of neg) if(k in q) q[k]=-q[k];
+  for(const k in q) if(/T$/.test(k) && /^(sh|el|hp)/.test(k)) q[k]=-q[k];
+  for(const k in q) if(/S$/.test(k) && /^(wr|ak)/.test(k)) q[k]=-q[k];
+  return q;
+}
+
+/* =====================================================================
+   MANIQUÍES
+   ===================================================================== */
+function newFigure(x,z,sex){
+  return {
+    pose:{...BASE, ...POSES[0].p}, from:null, to:null, animT:1, t0:0,
+    x:x||0, z:z||0, yaw:0, sex:sex||'F', h:(sex==='M'?182:175),
+    mirrored:false, poseIdx:0, poseKey:POSES[0].k, poseName:null,
+    joints:{}, boneT:{},
+    bbox:[0,0,0,0],
+  };
+}
+const figures=[newFigure(0,0)];
+let activeF=0;
+
+/* =====================================================================
+   CINEMÁTICA — llena los buffers del maniquí fi
+   ===================================================================== */
+function computeBones(fig, fi){
+  const P=fig.pose;
+  const rot={};
+  rot.root  = mulM(rotY(P.yaw+fig.yaw), mulM(rotX(P.pitch), rotZ(-P.roll)));
+  rot.spine = mulM(rotY(P.spT), mulM(rotX(P.spB), rotZ(-P.spS)));
+  rot.chest = mulM(rotY(P.chT), mulM(rotX(P.chB), rotZ(-P.chS)));
+  rot.neck  = mulM(rotY(P.nkT), mulM(rotX(P.nkB), rotZ(-P.nkS)));
+  rot.head  = mulM(rotY(P.hdT), mulM(rotX(P.hdB), rotZ(-P.hdS)));
+  rot.shL   = mulM(rotX(-P.shLF), mulM(rotZ( P.shLA), rotY( P.shLT)));
+  rot.shR   = mulM(rotX(-P.shRF), mulM(rotZ(-P.shRA), rotY(-P.shRT)));
+  rot.elbL  = mulM(rotX(-P.elLF), rotY( P.elLT));
+  rot.elbR  = mulM(rotX(-P.elRF), rotY(-P.elRT));
+  rot.wrL   = mulM(rotX(-P.wrLF), rotZ( P.wrLS));
+  rot.wrR   = mulM(rotX(-P.wrRF), rotZ(-P.wrRS));
+  rot.hipL  = mulM(rotX(-P.hpLF), mulM(rotZ( P.hpLA), rotY( P.hpLT)));
+  rot.hipR  = mulM(rotX(-P.hpRF), mulM(rotZ(-P.hpRA), rotY(-P.hpRT)));
+  rot.kneeL = rotX(P.knLF);
+  rot.kneeR = rotX(P.knRF);
+  rot.ankL  = mulM(rotX(P.akLF), rotZ( P.akLS));
+  rot.ankR  = mulM(rotX(P.akRF), rotZ(-P.akRS));
+
+  // escala uniforme de estatura (cm) — 175 cm es el tamaño de diseño
+  const sc=(fig.h||175)/175;
+  fig.scale=sc;
+  const cy=Math.cos(fig.yaw*D2R), sy=Math.sin(fig.yaw*D2R);
+  const rx=(P.px*cy+P.pz*sy)*sc + fig.x, rz=(-P.px*sy+P.pz*cy)*sc + fig.z;
+
+  const geo=GEO[fig.sex||'F'];
+  const T={};
+  for(const n of BONE_ORDER){
+    const b=geo.bones[n];
+    let R,t;
+    if(!b.p){ R=rot.root; t=[rx,P.py*sc,rz]; }
+    else{
+      const par=T[b.p], o0=b.o[0]*sc, o1=b.o[1]*sc, o2=b.o[2]*sc;
+      t=[
+        par.R[0]*o0+par.R[1]*o1+par.R[2]*o2+par.t[0],
+        par.R[3]*o0+par.R[4]*o1+par.R[5]*o2+par.t[1],
+        par.R[6]*o0+par.R[7]*o1+par.R[8]*o2+par.t[2]];
+      R=mulM(par.R, rot[n]||I3);
+    }
+    T[n]={R,t};
+    const base=fi*NVmax*3 + b.vStart*3;
+    const L=b.local;
+    for(let i=0;i<b.vCount;i++){
+      const x=L[i*3]*sc, y=L[i*3+1]*sc, z=L[i*3+2]*sc;
+      world[base+i*3]  =R[0]*x+R[1]*y+R[2]*z+t[0];
+      world[base+i*3+1]=R[3]*x+R[4]*y+R[5]*z+t[1];
+      world[base+i*3+2]=R[6]*x+R[7]*y+R[8]*z+t[2];
+    }
+  }
+  fig.boneT=T;
+  fig.joints={};
+  for(const n of BONE_ORDER) fig.joints[n]=T[n].t;
+}
+
+/* =====================================================================
+   ESTADO GLOBAL
+   ===================================================================== */
+const cam = {yaw:35, pitch:12, dist:3.6, fov:50, curv:0, tx:0, ty:0.92, tz:0};
+const CAM0 = {...cam};
+const light = {az:55, el:42, int:1.0, amb:0.28, fill:0.10};
+const opts = {shadow:true, grid:true, sun:true};
+let editMode=false, selJoint=null;
+let rafPending=false;
+
+function setPose(i, instant){
+  const fig=figures[activeF];
+  fig.poseIdx=i; fig.mirrored=false; fig.poseKey=POSES[i].k; fig.poseName=null;
+  const p={...BASE, ...POSES[i].p};
+  if(instant){fig.pose={...p}; fig.animT=1;}
+  else{fig.from={...fig.pose}; fig.to=p; fig.animT=0; fig.t0=performance.now();}
+  refreshPoseButtons(); refreshJointSliders(); renderMyPoses();
+  requestDraw();
+}
+function applyMirror(){
+  // espeja la pose ACTUAL (sirve para presets y para poses editadas a mano)
+  const fig=figures[activeF];
+  fig.mirrored=!fig.mirrored;
+  const p={...BASE, ...mirrorPose(fig.pose)};
+  fig.from={...fig.pose}; fig.to=p; fig.animT=0; fig.t0=performance.now();
+  refreshJointSliders();
+  requestDraw();
+}
+
+/* =====================================================================
+   MIS POSES — memoria del navegador (localStorage) + exportar/importar
+   ===================================================================== */
+const STORE_KEY='maniqui.misPoses.v1';
+let myPoses=[];
+function sanitizePose(p){
+  const q={};
+  for(const k in BASE){
+    const v=Number(p && p[k]);
+    q[k]=Number.isFinite(v)?v:BASE[k];
+  }
+  return q;
+}
+function loadMyPoses(){
+  try{
+    const raw=localStorage.getItem(STORE_KEY);
+    if(!raw) return;
+    const arr=JSON.parse(raw);
+    if(Array.isArray(arr))
+      myPoses=arr.filter(e=>e && typeof e.n==='string' && e.p)
+                 .map(e=>({n:e.n.slice(0,28), p:sanitizePose(e.p)}));
+  }catch(e){ /* almacenamiento no disponible: solo exportar/importar */ }
+}
+function persistMyPoses(){
+  try{ localStorage.setItem(STORE_KEY, JSON.stringify(myPoses)); }
+  catch(e){ document.getElementById('storeNote').textContent=
+    'Este navegador no permite guardar aquí: usa Exportar para no perder tus poses.'; }
+}
+function renderMyPoses(){
+  const box=document.getElementById('myPoses');
+  box.innerHTML='';
+  const fig=figures[activeF];
+  myPoses.forEach((e,i)=>{
+    const row=document.createElement('div'); row.className='mypose';
+    const b=document.createElement('button'); b.className='apply';
+    b.textContent=e.n; b.title=e.n;
+    if(fig.poseIdx===-1 && fig.poseName===e.n) b.classList.add('on');
+    b.addEventListener('click',()=>applyMyPose(i));
+    const d=document.createElement('button'); d.className='del';
+    d.textContent='✕'; d.title=T('delTip').replace('{n}', e.n);
+    d.addEventListener('click',()=>{
+      if(!confirm(T('delq').replace('{n}', e.n))) return;
+      myPoses.splice(i,1); persistMyPoses(); renderMyPoses();
+    });
+    row.appendChild(b); row.appendChild(d);
+    box.appendChild(row);
+  });
+}
+function applyMyPose(i){
+  const fig=figures[activeF];
+  const e=myPoses[i];
+  fig.poseIdx=-1; fig.mirrored=false; fig.poseKey=null; fig.poseName=e.n;
+  fig.from={...fig.pose}; fig.to={...BASE, ...e.p};
+  fig.animT=0; fig.t0=performance.now();
+  refreshPoseButtons(); refreshJointSliders(); renderMyPoses();
+  requestDraw();
+}
+document.getElementById('bSavePose').addEventListener('click',()=>{
+  const inp=document.getElementById('poseName');
+  let name=(inp.value||'').trim();
+  if(!name) name='Pose '+(myPoses.length+1);
+  name=name.slice(0,28);
+  const p=sanitizePose(figures[activeF].pose);
+  const existing=myPoses.findIndex(e=>e.n===name);
+  if(existing>=0){
+    if(!confirm(T('owq').replace('{n}', name))) return;
+    myPoses[existing].p=p;
+  } else {
+    myPoses.push({n:name, p});
+  }
+  const fig=figures[activeF];
+  fig.poseIdx=-1; fig.poseKey=null; fig.poseName=name;
+  inp.value='';
+  persistMyPoses(); renderMyPoses(); refreshPoseButtons();
+});
+document.getElementById('bExport').addEventListener('click',()=>{
+  const blob=new Blob([JSON.stringify({formato:'maniqui-poses', version:1, poses:myPoses}, null, 1)],
+    {type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='maniqui-poses.json';
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 5000);
+});
+document.getElementById('bImport').addEventListener('click',()=>
+  document.getElementById('importFile').click());
+document.getElementById('importFile').addEventListener('change',e=>{
+  const f=e.target.files[0];
+  if(!f) return;
+  const rd=new FileReader();
+  rd.onload=()=>{
+    try{
+      const data=JSON.parse(rd.result);
+      const arr=Array.isArray(data)?data:(data.poses||[]);
+      let added=0;
+      for(const it of arr){
+        if(!it || typeof it.n!=='string' || !it.p) continue;
+        let name=it.n.slice(0,28);
+        while(myPoses.some(x=>x.n===name)) name=(name+' ²').slice(0,28);
+        myPoses.push({n:name, p:sanitizePose(it.p)});
+        added++;
+      }
+      persistMyPoses(); renderMyPoses();
+      alert(added ? T('impOk').replace('{n}', added) : T('impNone'));
+    }catch(err){ alert(T('impErr')); }
+    e.target.value='';
+  };
+  rd.readAsText(f);
+});
+
+/* =====================================================================
+   ARTICULACIONES EDITABLES
+   ===================================================================== */
+const JOINTS=[
+ {b:'head',  k:'jHead',  pr:[['hdB','pNod',-50,60],['hdS','pTilt',-40,40],['hdT','pTurn',-70,70]]},
+ {b:'neck',  k:'jNeck',  pr:[['nkB','pNod',-45,45],['nkS','pTilt',-30,30],['nkT','pTurn',-60,60]]},
+ {b:'chest', k:'jChest', pr:[['chB','pBend',-40,45],['chS','pTilt',-30,30],['chT','pTwist',-45,45]]},
+ {b:'spine', k:'jWaist', pr:[['spB','pBend',-35,55],['spS','pTilt',-30,30],['spT','pTwist',-40,40]]},
+ {b:'root',  k:'jPelvis', pr:[['pitch','pPitch',-180,180],['roll','pRoll',-180,180],['yaw','pYaw',-180,180],['py','pHeight',0,1.6,0.01]]},
+ {b:'shL',   k:'jShL', pr:[['shLF','pFlex',-60,180],['shLA','pAbd',-40,180],['shLT','pTwist',-90,90]]},
+ {b:'shR',   k:'jShR', pr:[['shRF','pFlex',-60,180],['shRA','pAbd',-40,180],['shRT','pTwist',-90,90]]},
+ {b:'elbL',  k:'jElL', pr:[['elLF','pFlex',-5,150],['elLT','pRot',-90,90]]},
+ {b:'elbR',  k:'jElR', pr:[['elRF','pFlex',-5,150],['elRT','pRot',-90,90]]},
+ {b:'wrL',   k:'jWrL', pr:[['wrLF','pFlex',-60,60],['wrLS','pSide',-40,40]]},
+ {b:'wrR',   k:'jWrR', pr:[['wrRF','pFlex',-60,60],['wrRS','pSide',-40,40]]},
+ {b:'hipL',  k:'jHipL', pr:[['hpLF','pFlex',-45,130],['hpLA','pAbd',-35,90],['hpLT','pTwist',-45,45]]},
+ {b:'hipR',  k:'jHipR', pr:[['hpRF','pFlex',-45,130],['hpRA','pAbd',-35,90],['hpRT','pTwist',-45,45]]},
+ {b:'kneeL', k:'jKnL', pr:[['knLF','pFlex',-5,150]]},
+ {b:'kneeR', k:'jKnR', pr:[['knRF','pFlex',-5,150]]},
+ {b:'ankL',  k:'jAkL', pr:[['akLF','pFlex',-35,70],['akLS','pSide',-30,30]]},
+ {b:'ankR',  k:'jAkR', pr:[['akRF','pFlex',-35,70],['akRS','pSide',-30,30]]},
+];
+const JOINT_BY_BONE={}; JOINTS.forEach(j=>JOINT_BY_BONE[j.b]=j);
+
+const jointPanel=document.getElementById('jointPanel');
+function refreshJointSliders(){
+  jointPanel.innerHTML='';
+  const hint=document.getElementById('jointHint');
+  if(hint) hint.style.display=(editMode && !selJoint)?'block':'none';
+  if(!editMode || !selJoint) return;
+  const j=JOINT_BY_BONE[selJoint];
+  const fig=figures[activeF];
+  const title=document.createElement('div');
+  title.className='jtitle'; title.textContent='◉ '+T(j.k);
+  jointPanel.appendChild(title);
+  for(const [key,label,min,max,step] of j.pr){
+    const row=document.createElement('div'); row.className='row';
+    const lab=document.createElement('label'); lab.textContent=T(label);
+    const inp=document.createElement('input');
+    inp.type='range'; inp.min=min; inp.max=max; inp.step=step||1;
+    inp.value=fig.pose[key];
+    // valor editable tipeando, para asignar ángulos con precisión
+    const num=document.createElement('input');
+    num.type='number'; num.min=min; num.max=max; num.step=step||1;
+    num.value=step? (+fig.pose[key]).toFixed(2) : Math.round(fig.pose[key]);
+    inp.addEventListener('input',()=>{
+      figures[activeF].pose[key]=+inp.value;
+      figures[activeF].animT=1;
+      num.value=inp.value;
+      requestDraw();
+    });
+    const commit=()=>{
+      let v=+num.value;
+      if(!Number.isFinite(v)) v=figures[activeF].pose[key];
+      v=Math.max(min,Math.min(max,v));
+      num.value=step? v.toFixed(2) : Math.round(v);
+      inp.value=v;
+      figures[activeF].pose[key]=v;
+      figures[activeF].animT=1;
+      requestDraw();
+    };
+    num.addEventListener('change',commit);
+    num.addEventListener('keydown',e=>{ if(e.key==='Enter'){ commit(); num.blur(); } });
+    row.appendChild(lab); row.appendChild(inp); row.appendChild(num);
+    jointPanel.appendChild(row);
+  }
+}
+
+/* =====================================================================
+   RENDER
+   ===================================================================== */
+const cv=document.getElementById('cv');
+const ctx=cv.getContext('2d');
+let W=0,H=0,DPR=1;
+let shadowCv=document.createElement('canvas'), shCtx=shadowCv.getContext('2d');
+
+function resize(){
+  const r=cv.parentElement.getBoundingClientRect();
+  DPR=Math.min(window.devicePixelRatio||1, 1.75);
+  W=Math.max(50, Math.round(r.width*DPR)); H=Math.max(50, Math.round(r.height*DPR));
+  cv.width=W; cv.height=H;
+  shadowCv.width=W; shadowCv.height=H;
+  requestDraw();
+}
+
+const shadeCaches={};
+function shadeColor(t, tint){
+  const key=tint.toFixed(2);
+  let cache=shadeCaches[key];
+  if(!cache) cache=shadeCaches[key]=[];
+  const i=Math.max(0, Math.min(47, Math.round(t*47)));
+  if(!cache[i]){
+    const u=i/47;
+    let r=38+(226-38)*u + 8*u*u;
+    let g=40+(212-40)*u;
+    let b=52+(198-52)*u - 6*u;
+    r*=tint; g*=tint; b*=tint*(tint<1?1.06:1);
+    cache[i]=`rgb(${Math.min(255,Math.round(r))},${Math.round(g)},${Math.round(b)})`;
+  }
+  return cache[i];
+}
+
+function cameraBasis(){
+  const yaw=cam.yaw*D2R, pit=cam.pitch*D2R;
+  const cp=Math.cos(pit);
+  const ex=cam.tx + cam.dist*cp*Math.sin(yaw);
+  const ey=cam.ty + cam.dist*Math.sin(pit);
+  const ez=cam.tz + cam.dist*cp*Math.cos(yaw);
+  let fx=cam.tx-ex, fy=cam.ty-ey, fz=cam.tz-ez;
+  const fl=Math.hypot(fx,fy,fz); fx/=fl; fy/=fl; fz/=fl;
+  let rx=-fz, ry_=0, rz=fx;
+  let rl=Math.hypot(rx,ry_,rz);
+  if(rl<1e-6){rx=1;ry_=0;rz=0;rl=1;}
+  rx/=rl; ry_/=rl; rz/=rl;
+  const ux=ry_*fz-rz*fy, uy=rz*fx-rx*fz, uz=rx*fy-ry_*fx;
+  const s=(H/2)/Math.tan(cam.fov*0.5*D2R);
+  return {ex,ey,ez, fx,fy,fz, rx,ry:ry_,rz, ux,uy,uz, s, cx:W/2, cy:H*0.52, near:0.12, k:cam.curv};
+}
+
+function lightDir(){
+  const az=light.az*D2R, el=light.el*D2R;
+  return [Math.sin(az)*Math.cos(el), Math.sin(el), Math.cos(az)*Math.cos(el)];
+}
+
+// proyección con mezcla rectilínea → curvilínea (ojo de pez equidistante)
+function project(px,py,pz, C){
+  const dx=px-C.ex, dy=py-C.ey, dz=pz-C.ez;
+  const z=dx*C.fx+dy*C.fy+dz*C.fz;
+  const x=dx*C.rx+dy*C.ry+dz*C.rz;
+  const y=dx*C.ux+dy*C.uy+dz*C.uz;
+  if(C.k>0){
+    const rho=Math.hypot(x,y);
+    const th=Math.atan2(rho, z);
+    const g=(1-C.k)*Math.tan(th)+C.k*th;
+    const f=rho>1e-9 ? C.s*g/rho : 0;
+    return [C.cx + x*f, C.cy - y*f, z];
+  }
+  return [C.cx + x*C.s/z, C.cy - y*C.s/z, z];
+}
+
+// rayo de un píxel del lienzo al plano y=0 (invierte también la curvatura)
+function pickGround(px,py,C){
+  let dx=(px-C.cx)/C.s, dy=(C.cy-py)/C.s;
+  if(C.k>0){
+    const q=Math.hypot(dx,dy);
+    if(q>1e-9){
+      let lo=0, hi=1.53;                       // resuelve g(θ)=q por bisección
+      for(let i=0;i<24;i++){
+        const mid=(lo+hi)/2;
+        const g=(1-C.k)*Math.tan(mid)+C.k*mid;
+        if(g<q) lo=mid; else hi=mid;
+      }
+      const th=(lo+hi)/2;
+      const f=Math.tan(th)/q;
+      dx*=f; dy*=f;
+    }
+  }
+  const rx=C.fx + C.rx*dx + C.ux*dy;
+  const ry=C.fy + C.ry*dx + C.uy*dy;
+  const rz=C.fz + C.rz*dx + C.uz*dy;
+  if(Math.abs(ry)<1e-6) return null;
+  const t=-C.ey/ry;
+  if(t<=0) return null;
+  return [C.ex+rx*t, 0, C.ez+rz*t];
+}
+
+function drawGrid(C){
+  const EXT=2.4, STEP=0.3;
+  ctx.lineWidth=1;
+  const col = THEMES[theme].grid;
+  for(let k=-EXT; k<=EXT+0.001; k+=STEP){
+    const major=Math.abs(k)<0.001;
+    ctx.strokeStyle=col+(major?0.35:0.13)+')';
+    drawSeg(-EXT,0,k, EXT,0,k, C);
+    drawSeg(k,0,-EXT, k,0,EXT, C);
+  }
+}
+function drawSeg(x1,y1,z1,x2,y2,z2,C){
+  let a=[x1-C.ex, y1-C.ey, z1-C.ez], b=[x2-C.ex, y2-C.ey, z2-C.ez];
+  let za=a[0]*C.fx+a[1]*C.fy+a[2]*C.fz, zb=b[0]*C.fx+b[1]*C.fy+b[2]*C.fz;
+  if(za<C.near && zb<C.near) return;
+  let p1=[x1,y1,z1], p2=[x2,y2,z2];
+  if(za<C.near){const t=(C.near-za)/(zb-za); p1=[x1+(x2-x1)*t, y1+(y2-y1)*t, z1+(z2-z1)*t];}
+  if(zb<C.near){const t=(C.near-zb)/(za-zb); p2=[x2+(x1-x2)*t, y2+(y1-y2)*t, z2+(z1-z2)*t];}
+  // con curvatura las rectas se curvan: se muestrea la línea
+  const N=C.k>0?16:1;
+  ctx.beginPath();
+  for(let i=0;i<=N;i++){
+    const t=i/N;
+    const s=project(p1[0]+(p2[0]-p1[0])*t, p1[1]+(p2[1]-p1[1])*t, p1[2]+(p2[2]-p1[2])*t, C);
+    if(i===0) ctx.moveTo(s[0],s[1]); else ctx.lineTo(s[0],s[1]);
+  }
+  ctx.stroke();
+}
+
+function groundCircle(cx,cz,r,C,close){
+  ctx.beginPath();
+  let first=true;
+  for(let i=0;i<=24;i++){
+    const a=i/24*2*Math.PI;
+    const px=cx+Math.cos(a)*r, pz=cz+Math.sin(a)*r;
+    const dx=px-C.ex, dy=-C.ey, dz=pz-C.ez;
+    const z=dx*C.fx+dy*C.fy+dz*C.fz;
+    if(z<C.near){first=true; continue;}
+    const x=C.cx+(dx*C.rx+dy*C.ry+dz*C.rz)*C.s/z;
+    const y=C.cy-(dx*C.ux+dy*C.uy+dz*C.uz)*C.s/z;
+    if(first){ctx.moveTo(x,y); first=false;} else ctx.lineTo(x,y);
+  }
+}
+
+function drawBases(C){
+  figures.forEach((fig,fi)=>{
+    const sel=fi===activeF;
+    ctx.lineWidth=sel?2.2:1.2;
+    const TH=THEMES[theme];
+    ctx.strokeStyle=sel?TH.acc+'0.95)':TH.inact;
+    groundCircle(fig.x,fig.z,0.26,C);
+    ctx.stroke();
+    if(sel){
+      ctx.fillStyle=TH.acc+'0.12)';
+      groundCircle(fig.x,fig.z,0.26,C); ctx.fill();
+    }
+  });
+}
+
+function drawShadow(C,L){
+  if(L[1]<0.18) L=[L[0],0.18,L[2]];
+  shCtx.clearRect(0,0,W,H);
+  shCtx.fillStyle='#000';
+  for(const fig of figures){
+    const sc=fig.scale||1;
+    const geo=GEO[fig.sex||'F'];
+    for(const n of BONE_ORDER){
+      const b=geo.bones[n], T=fig.boneT[n];
+      if(!T) continue;
+      const R=T.R, t=T.t;
+      for(const d of b.discs){
+        const c0=d.c[0]*sc, c1=d.c[1]*sc, c2=d.c[2]*sc, dr=d.r*sc;
+        const wx=R[0]*c0+R[1]*c1+R[2]*c2+t[0];
+        const wy=R[3]*c0+R[4]*c1+R[5]*c2+t[1];
+        const wz=R[6]*c0+R[7]*c1+R[8]*c2+t[2];
+        if(wy<0) continue;
+        const k=wy/L[1];
+        const gx=wx-L[0]*k, gz=wz-L[2]*k;
+        shCtx.beginPath();
+        let first=true;
+        for(let i=0;i<10;i++){
+          const a=i/10*2*Math.PI;
+          const px=gx+Math.cos(a)*dr*1.02, pz=gz+Math.sin(a)*dr*1.02;
+          const s2=project(px,0,pz,C);
+          if(s2[2]<C.near){first=true; continue;}
+          if(first){shCtx.moveTo(s2[0],s2[1]); first=false;} else shCtx.lineTo(s2[0],s2[1]);
+        }
+        shCtx.closePath(); shCtx.fill();
+      }
+    }
+  }
+  ctx.save();
+  ctx.globalAlpha = THEMES[theme].shadowA;
+  ctx.drawImage(shadowCv,0,0);
+  ctx.restore();
+}
+
+function drawJointDots(C){
+  const fig=figures[activeF];
+  ctx.save();
+  for(const j of JOINTS){
+    const t=fig.joints[j.b];
+    if(!t) continue;
+    const s=project(t[0],t[1],t[2],C);
+    if(s[2]<C.near) continue;
+    const sel=selJoint===j.b;
+    ctx.beginPath();
+    ctx.arc(s[0],s[1],(sel?7:5)*DPR,0,7);
+    ctx.fillStyle=sel?THEMES[theme].dotSel:THEMES[theme].dot+'0.85)';
+    ctx.fill();
+    ctx.lineWidth=1.5*DPR;
+    ctx.strokeStyle=THEMES[theme].outline;
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function draw(){
+  rafPending=false;
+  let animating=false;
+  const now=performance.now();
+  for(const fig of figures){
+    if(fig.animT<1){
+      fig.animT=Math.min(1,(now-fig.t0)/320);
+      const e=1-Math.pow(1-fig.animT,3);
+      for(const k in BASE) fig.pose[k]=fig.from[k]+(fig.to[k]-fig.from[k])*e;
+      if(fig.animT<1) animating=true;
+    }
+  }
+  if(animating) requestDraw();
+
+  const C=cameraBasis();
+  const L=lightDir();
+  figures.forEach((fig,fi)=>computeBones(fig,fi));
+
+  const TH=THEMES[theme];
+  const g=ctx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,TH.bg0); g.addColorStop(1,TH.bg1);
+  ctx.fillStyle=g;
+  ctx.fillRect(0,0,W,H);
+
+  const fast = pointers.size>0 && dragMode==='orbit';
+  if(opts.grid) drawGrid(C);
+  drawBases(C);
+  if(opts.shadow && !fast) drawShadow(C,L);
+
+  const nF=figures.length;
+  for(let fi=0; fi<nF; fi++){
+    const off=fi*NVmax;
+    const fig=figures[fi];
+    const geoV=GEO[fig.sex||'F'];
+    let bx0=1e9,by0=1e9,bx1=-1e9,by1=-1e9;
+    const K=C.k;
+    for(let i=0;i<geoV.NV;i++){
+      const gi=off+i;
+      const px=world[gi*3], py=world[gi*3+1], pz=world[gi*3+2];
+      const dx=px-C.ex, dy=py-C.ey, dz=pz-C.ez;
+      const z=dx*C.fx+dy*C.fy+dz*C.fz;
+      scrZ[gi]=z;
+      if(z<C.near){scrX[gi]=-1e4; continue;}
+      const vx=dx*C.rx+dy*C.ry+dz*C.rz;
+      const vy=dx*C.ux+dy*C.uy+dz*C.uz;
+      let sx,sy;
+      if(K>0){
+        const rho=Math.sqrt(vx*vx+vy*vy);
+        const th=Math.atan2(rho,z);
+        const g=(1-K)*Math.tan(th)+K*th;
+        const f=rho>1e-9?C.s*g/rho:0;
+        sx=C.cx+vx*f; sy=C.cy-vy*f;
+      } else {
+        sx=C.cx+vx*C.s/z; sy=C.cy-vy*C.s/z;
+      }
+      scrX[gi]=sx; scrY[gi]=sy;
+      if(sx<bx0)bx0=sx; if(sx>bx1)bx1=sx;
+      if(sy<by0)by0=sy; if(sy>by1)by1=sy;
+    }
+    fig.bbox=[bx0,by0,bx1,by1];
+  }
+
+  let m=0;
+  const int=light.int, amb=light.amb, fill=light.fill;
+  for(let fi=0; fi<nF; fi++){
+    const off=fi*NVmax;
+    const geoT=GEO[figures[fi].sex||'F'];
+    const TRI=geoT.TRI, TINTg=geoT.TINT;
+    for(let t=0;t<geoT.NT;t++){
+      const a=off+TRI[t*3], b=off+TRI[t*3+1], c=off+TRI[t*3+2];
+      if(scrZ[a]<C.near||scrZ[b]<C.near||scrZ[c]<C.near) continue;
+      const ax=world[a*3], ay=world[a*3+1], az=world[a*3+2];
+      const e1x=world[b*3]-ax, e1y=world[b*3+1]-ay, e1z=world[b*3+2]-az;
+      const e2x=world[c*3]-ax, e2y=world[c*3+1]-ay, e2z=world[c*3+2]-az;
+      let nx=e1y*e2z-e1z*e2y, ny=e1z*e2x-e1x*e2z, nz=e1x*e2y-e1y*e2x;
+      const vx=ax-C.ex, vy=ay-C.ey, vz=az-C.ez;
+      if(nx*vx+ny*vy+nz*vz>=0) continue;
+      const nl=Math.sqrt(nx*nx+ny*ny+nz*nz);
+      nx/=nl; ny/=nl; nz/=nl;
+      const lam=Math.max(0, nx*L[0]+ny*L[1]+nz*L[2]);
+      const vl=Math.sqrt(vx*vx+vy*vy+vz*vz);
+      const fl2=Math.max(0, -(nx*vx+ny*vy+nz*vz)/vl);
+      let tone=amb + int*lam*0.92 + fill*fl2;
+      shade[m]=tone>1?1:tone;
+      shTint[m]=TINTg[t];
+      depth[m]=scrZ[a]+scrZ[b]+scrZ[c];
+      order[m]=(fi<<20)|t;   // NT < 2^20
+      m++;
+    }
+  }
+  const idx=new Array(m);
+  for(let i=0;i<m;i++) idx[i]=i;
+  idx.sort((i,j)=>depth[j]-depth[i]);
+
+  ctx.lineJoin='round';
+  for(let q=0;q<m;q++){
+    const i=idx[q], packed=order[i];
+    const fi=packed>>20, t=packed&0xFFFFF;
+    const off=fi*NVmax;
+    const TRI=GEO[figures[fi].sex||'F'].TRI;
+    const a=off+TRI[t*3], b=off+TRI[t*3+1], c=off+TRI[t*3+2];
+    const col=shadeColor(shade[i], shTint[i]);
+    ctx.fillStyle=col;
+    ctx.beginPath();
+    ctx.moveTo(scrX[a],scrY[a]); ctx.lineTo(scrX[b],scrY[b]); ctx.lineTo(scrX[c],scrY[c]);
+    ctx.closePath(); ctx.fill();
+    if(!fast){ ctx.strokeStyle=col; ctx.lineWidth=0.8; ctx.stroke(); }
+  }
+
+  if(opts.sun){
+    const sp=[cam.tx+L[0]*2.6, Math.max(0.3,cam.ty+ (L[1]*2.6)), cam.tz+L[2]*2.6];
+    const sscr=project(sp[0],sp[1],sp[2],C);
+    const z=sscr[2];
+    if(z>C.near){
+      const x=sscr[0], y=sscr[1];
+      ctx.save();
+      ctx.strokeStyle=THEMES[theme].sun; ctx.fillStyle=THEMES[theme].sun;
+      ctx.lineWidth=1.5*DPR;
+      ctx.beginPath(); ctx.arc(x,y,5*DPR,0,7); ctx.fill();
+      for(let i=0;i<8;i++){
+        const a=i/8*2*Math.PI;
+        ctx.beginPath();
+        ctx.moveTo(x+Math.cos(a)*8*DPR, y+Math.sin(a)*8*DPR);
+        ctx.lineTo(x+Math.cos(a)*12*DPR, y+Math.sin(a)*12*DPR);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+  }
+
+  if(editMode) drawJointDots(C);
+  updateHud();
+}
+
+function requestDraw(){
+  if(!rafPending){rafPending=true; requestAnimationFrame(draw);}
+}
+
+function updateHud(){
+  const fig=figures[activeF];
+  const mm=(12/Math.tan(cam.fov*0.5*D2R)).toFixed(cam.fov>110?1:0);
+  const pname=fig.poseKey ? T(fig.poseKey) : fig.poseName;
+  document.getElementById('hud').textContent=
+    `${T('hudFig')} ${activeF+1}${fig.sex==='M'?'♂':'♀'}/${figures.length} · ${pname}${fig.mirrored?' ('+T('hudMirror')+')':''}`+
+    `${editMode?' · '+T('hudEdit'):''} · FOV ${Math.round(cam.fov)}° (≈${mm} mm)`;
+}
+
+/* =====================================================================
+   INTERACCIÓN
+   ===================================================================== */
+const pointers=new Map();
+let lastPinch=0, dragMode='orbit', dragData=null;
+
+function canvasXY(e){
+  const r=cv.getBoundingClientRect();
+  return [(e.clientX-r.left)*DPR, (e.clientY-r.top)*DPR];
+}
+
+cv.addEventListener('pointerdown',e=>{
+  cv.setPointerCapture(e.pointerId);
+  pointers.set(e.pointerId,{x:e.clientX,y:e.clientY,btn:e.button,shift:e.shiftKey});
+  if(pointers.size===2){
+    const p=[...pointers.values()];
+    lastPinch=Math.hypot(p[0].x-p[1].x, p[0].y-p[1].y);
+    dragMode='orbit';
+    return;
+  }
+  if(e.button!==0 || e.shiftKey){ dragMode='orbit'; return; }
+  const [mx,my]=canvasXY(e);
+  const C=cameraBasis();
+  // 1) puntos de articulación del maniquí activo
+  if(editMode){
+    const fig=figures[activeF];
+    for(const j of JOINTS){
+      const t=fig.joints[j.b];
+      if(!t) continue;
+      const s=project(t[0],t[1],t[2],C);
+      if(s[2]>C.near && Math.hypot(s[0]-mx,s[1]-my)<14*DPR){
+        selJoint=j.b;
+        dragMode='joint';
+        dragData={start:[mx,my], p0:{...fig.pose}};
+        refreshJointSliders();
+        requestDraw();
+        return;
+      }
+    }
+  }
+  // 2) aros de base (mover maniquí)
+  for(let fi=0; fi<figures.length; fi++){
+    const fig=figures[fi];
+    const s=project(fig.x,0,fig.z,C);
+    const edge=project(fig.x+0.26,0,fig.z,C);
+    const rr=Math.max(14*DPR, Math.hypot(edge[0]-s[0],edge[1]-s[1]));
+    if(s[2]>C.near && Math.hypot(s[0]-mx,s[1]-my)<rr){
+      if(activeF!==fi) selectFigure(fi);
+      const hit=pickGround(mx,my,C);
+      dragMode='fig';
+      dragData=hit?{gx:hit[0]-fig.x, gz:hit[2]-fig.z}:{gx:0,gz:0};
+      requestDraw();
+      return;
+    }
+  }
+  // 3) clic sobre el cuerpo = seleccionar
+  for(let fi=0; fi<figures.length; fi++){
+    const b=figures[fi].bbox;
+    if(mx>=b[0]-8 && mx<=b[2]+8 && my>=b[1]-8 && my<=b[3]+8 && activeF!==fi){
+      selectFigure(fi);
+      break;
+    }
+  }
+  dragMode='orbit';
+});
+cv.addEventListener('pointermove',e=>{
+  if(!pointers.has(e.pointerId)) return;
+  const pt=pointers.get(e.pointerId);
+  const dx=e.clientX-pt.x, dy=e.clientY-pt.y;
+  if(pointers.size===1){
+    if(dragMode==='fig'){
+      const [mx,my]=canvasXY(e);
+      const hit=pickGround(mx,my,cameraBasis());
+      if(hit){
+        const fig=figures[activeF];
+        fig.x=Math.max(-2.3,Math.min(2.3, hit[0]-dragData.gx));
+        fig.z=Math.max(-2.3,Math.min(2.3, hit[2]-dragData.gz));
+      }
+      requestDraw();
+    } else if(dragMode==='joint' && selJoint){
+      const j=JOINT_BY_BONE[selJoint];
+      const fig=figures[activeF];
+      const p0=dragData.p0;
+      const k0=j.pr[0], k1=j.pr[1];
+      const scale=0.45;
+      // arrastrar hacia arriba aumenta el primer parámetro; horizontal, el segundo
+      if(k0 && k0[0]!=='py'){
+        fig.pose[k0[0]]=Math.max(k0[2],Math.min(k0[3], p0[k0[0]] - dy*scale));
+      }
+      if(k1 && k1[0]!=='py'){
+        fig.pose[k1[0]]=Math.max(k1[2],Math.min(k1[3], p0[k1[0]] + dx*scale));
+      }
+      fig.animT=1;
+      refreshJointSliders();
+      requestDraw();
+      return;             // no actualizar pt: delta acumulado desde el inicio
+    } else {
+      if(pt.btn===2 || pt.shift){ panCam(dx,dy); }
+      else { cam.yaw-=dx*0.4; cam.pitch=Math.max(-88,Math.min(88,cam.pitch+dy*0.3)); }
+      requestDraw();
+    }
+  } else if(pointers.size===2){
+    pt.x=e.clientX; pt.y=e.clientY;
+    const p=[...pointers.values()];
+    const pinch=Math.hypot(p[0].x-p[1].x, p[0].y-p[1].y);
+    if(lastPinch>0){ cam.dist=Math.max(0.7,Math.min(14, cam.dist*lastPinch/pinch)); }
+    lastPinch=pinch;
+    requestDraw();
+    return;
+  }
+  pt.x=e.clientX; pt.y=e.clientY;
+});
+function endPointer(e){
+  pointers.delete(e.pointerId); lastPinch=0;
+  dragMode='orbit'; dragData=null;
+  requestDraw();
+}
+cv.addEventListener('pointerup',endPointer);
+cv.addEventListener('pointercancel',endPointer);
+cv.addEventListener('contextmenu',e=>e.preventDefault());
+cv.addEventListener('wheel',e=>{
+  e.preventDefault();
+  cam.dist=Math.max(0.7,Math.min(14, cam.dist*Math.exp(e.deltaY*0.0011)));
+  requestDraw();
+},{passive:false});
+cv.addEventListener('dblclick',()=>{
+  const fig=figures[activeF];
+  cam.tx=fig.x; cam.ty=fig.pose.py<0.5?0.45:0.92; cam.tz=fig.z;
+  requestDraw();
+});
+function panCam(dx,dy){
+  const C=cameraBasis();
+  const k=cam.dist*0.0016;
+  cam.tx-=C.rx*dx*k; cam.ty-=C.ry*dx*k; cam.tz-=C.rz*dx*k;
+  cam.tx+=C.ux*dy*k; cam.ty+=C.uy*dy*k; cam.tz+=C.uz*dy*k;
+}
+
+/* ---------- UI ---------- */
+const figsDiv=document.getElementById('figs');
+function renderFigChips(){
+  figsDiv.innerHTML='';
+  figures.forEach((f,i)=>{
+    const b=document.createElement('button');
+    b.textContent=(i+1)+(f.sex==='M'?'♂':'♀');
+    b.title=T(f.sex==='M'?'figM':'figF').replace('{n}', i+1);
+    if(i===activeF) b.classList.add('on');
+    b.addEventListener('click',()=>selectFigure(i));
+    figsDiv.appendChild(b);
+  });
+  const mk=(txt,title,cls,fn)=>{
+    const b=document.createElement('button');
+    b.textContent=txt; b.title=title; b.className=cls;
+    b.addEventListener('click',fn);
+    figsDiv.appendChild(b);
+  };
+  if(figures.length<MAXF){
+    mk('+♀',T('addF'),'add',()=>addFigure('F'));
+    mk('+♂',T('addM'),'add',()=>addFigure('M'));
+  }
+  if(figures.length>1)
+    mk('✕',T('delFig'),'add del',()=>{
+      figures.splice(activeF,1);
+      selectFigure(Math.max(0,activeF-1));
+    });
+}
+function selectFigure(i){
+  activeF=i;
+  selJoint=null;
+  renderFigChips(); refreshPoseButtons(); refreshJointSliders(); syncTurn(); renderMyPoses();
+  requestDraw();
+}
+function addFigure(sex){
+  if(figures.length>=MAXF) return;
+  const n=figures.length;
+  const ang=n*2.4;
+  figures.push(newFigure(Math.cos(ang)*0.8*Math.ceil(n/2), Math.sin(ang)*0.8*Math.ceil(n/2), sex));
+  selectFigure(figures.length-1);
+}
+
+const posesDiv=document.getElementById('poses');
+function renderPoseButtons(){
+  posesDiv.innerHTML='';
+  POSES.forEach((p,i)=>{
+    const b=document.createElement('button');
+    b.textContent=T(p.k); b.dataset.i=i;
+    b.addEventListener('click',()=>setPose(i,false));
+    posesDiv.appendChild(b);
+  });
+  refreshPoseButtons();
+}
+function refreshPoseButtons(){
+  const cur=figures[activeF].poseIdx;
+  document.querySelectorAll('#poses button').forEach(b=>b.classList.toggle('on', +b.dataset.i===cur));
+}
+
+function bindSlider(id, vid, fn, fmt){
+  const s=document.getElementById(id), v=document.getElementById(vid);
+  const upd=()=>{v.textContent=fmt(+s.value); fn(+s.value); requestDraw();};
+  s.addEventListener('input',upd); upd();
+}
+bindSlider('sFov','vFov', x=>{cam.fov=x;}, x=>{
+  const mm=(12/Math.tan(x*0.5*D2R)).toFixed(x>110?1:0); return `${x}°·${mm}mm`;});
+bindSlider('sCurv','vCurv', x=>{cam.curv=x/100;}, x=>x+'%');
+bindSlider('sAz','vAz', x=>{light.az=x;}, x=>x+'°');
+bindSlider('sEl','vEl', x=>{light.el=x;}, x=>x+'°');
+bindSlider('sInt','vInt', x=>{light.int=x/100;}, x=>x+'%');
+bindSlider('sAmb','vAmb', x=>{light.amb=x/100;}, x=>x+'%');
+bindSlider('sFill','vFill', x=>{light.fill=x/100;}, x=>x+'%');
+
+const sTurn=document.getElementById('sTurn'), vTurn=document.getElementById('vTurn');
+sTurn.addEventListener('input',()=>{
+  figures[activeF].yaw=+sTurn.value;
+  vTurn.textContent=sTurn.value+'°';
+  requestDraw();
+});
+const sAlt=document.getElementById('sAlt'), nAlt=document.getElementById('nAlt');
+function setHeight(v){
+  v=Math.max(140,Math.min(300, Math.round(v)));
+  figures[activeF].h=v;
+  sAlt.value=v; nAlt.value=v;
+  requestDraw();
+}
+sAlt.addEventListener('input',()=>setHeight(+sAlt.value));
+nAlt.addEventListener('change',()=>{
+  const v=+nAlt.value;
+  setHeight(Number.isFinite(v)?v:figures[activeF].h);
+});
+function syncTurn(){
+  sTurn.value=figures[activeF].yaw;
+  vTurn.textContent=Math.round(figures[activeF].yaw)+'°';
+  sAlt.value=figures[activeF].h;
+  nAlt.value=figures[activeF].h;
+}
+
+// la rueda del ratón ajusta cualquier deslizador o campo numérico bajo el cursor
+// (una muesca = un paso; con Shift, ×10). Fuera de los controles, el panel se
+// desplaza con normalidad.
+document.getElementById('panel').addEventListener('wheel', e=>{
+  const t=e.target;
+  if(!(t instanceof HTMLInputElement) || (t.type!=='range' && t.type!=='number')) return;
+  e.preventDefault();
+  const step=(+t.step||1)*(e.shiftKey?10:1);
+  const dir=(e.deltaY<0 || e.deltaX<0) ? 1 : -1;
+  let v=(+t.value||0)+dir*step;
+  const min=t.min!==''?+t.min:-Infinity, max=t.max!==''?+t.max:Infinity;
+  v=Math.max(min, Math.min(max, v));
+  const dec=(String(t.step).split('.')[1]||'').length;
+  t.value=dec ? v.toFixed(dec) : String(Math.round(v));
+  t.dispatchEvent(new Event('input',{bubbles:true}));
+  t.dispatchEvent(new Event('change',{bubbles:true}));
+},{passive:false});
+
+function bindCheck(id, key){
+  const c=document.getElementById(id);
+  c.addEventListener('change',()=>{opts[key]=c.checked; requestDraw();});
+  opts[key]=c.checked;
+}
+bindCheck('cShadow','shadow'); bindCheck('cGrid','grid');
+bindCheck('cSun','sun');
+document.getElementById('bMirror').addEventListener('click',applyMirror);
+document.getElementById('bCamReset').addEventListener('click',()=>{
+  Object.assign(cam, CAM0);
+  document.getElementById('sFov').value=CAM0.fov;
+  document.getElementById('sFov').dispatchEvent(new Event('input'));
+  document.getElementById('sCurv').value=Math.round(CAM0.curv*100);
+  document.getElementById('sCurv').dispatchEvent(new Event('input'));
+  requestDraw();
+});
+const bEdit=document.getElementById('bEdit');
+bEdit.addEventListener('click',()=>{
+  editMode=!editMode;
+  bEdit.classList.toggle('on', editMode);
+  if(!editMode) selJoint=null;
+  refreshJointSliders();
+  requestDraw();
+});
+
+// secciones plegables (clic en el título); recuerda el estado
+const SEC_KEY='maniqui.secciones.v1';
+let secState={};
+try{ secState=JSON.parse(localStorage.getItem(SEC_KEY))||{}; }catch(e){}
+document.querySelectorAll('#panel .sec').forEach(sec=>{
+  const h=sec.querySelector('h2');
+  if(!h) return;
+  const name=sec.dataset.si||h.textContent.trim();
+  const closed = (name in secState) ? !!secState[name] : (name==='help');
+  if(closed) sec.classList.add('closed');
+  h.addEventListener('click',()=>{
+    sec.classList.toggle('closed');
+    secState[name]=sec.classList.contains('closed')?1:0;
+    try{ localStorage.setItem(SEC_KEY, JSON.stringify(secState)); }catch(e){}
+  });
+});
+
+function applyLang(){
+  document.documentElement.lang=lang;
+  document.querySelectorAll('[data-i18n]').forEach(el=>{ el.textContent=T(el.dataset.i18n); });
+  document.querySelectorAll('[data-i18n-title]').forEach(el=>{ el.title=T(el.dataset.i18nTitle); });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el=>{ el.placeholder=T(el.dataset.i18nPh); });
+  document.getElementById('help').innerHTML=
+    '<b>'+T('hTitle')+'</b><br>'+T('h1')+'<br>'+T('h2')+'<br>'+T('h3')+'<br>'+T('h4')+'<br>'+T('h5');
+  renderPoseButtons(); renderFigChips(); renderMyPoses(); refreshJointSliders();
+  try{ localStorage.setItem('zamu.lang', lang); }catch(e){}
+  requestDraw();
+}
+function applyTheme(){
+  document.documentElement.dataset.theme=theme;
+  document.getElementById('bTheme').textContent = theme==='dark' ? '☀' : '🌙';
+  try{ localStorage.setItem('zamu.theme', theme); }catch(e){}
+  requestDraw();
+}
+document.getElementById('selLang').addEventListener('change',e=>{
+  lang=e.target.value; if(!I18N[lang]) lang='en';
+  applyLang();
+});
+document.getElementById('bTheme').addEventListener('click',()=>{
+  theme = theme==='dark' ? 'light' : 'dark';
+  applyTheme();
+});
+
+window.addEventListener('resize',resize);
+resize();
+loadMyPoses();
+applyTheme();
+document.getElementById('selLang').value=lang;
+setPose(0,true);
+applyLang();
+syncTurn();
+
+// ganchos para pruebas automatizadas (no afectan el uso normal)
+window.__setPose=(i)=>setPose(i,true);
+window.__poseCount=POSES.length;
+window.__cam=cam; window.__light=light; window.__redraw=requestDraw;
+window.__figs=figures; window.__addFig=(s)=>addFigure(s||'F');
+window.__selectFig=selectFigure;
+window.__setEdit=(v)=>{ if(editMode!==v) bEdit.click(); };
+window.__selectJoint=(b)=>{ selJoint=b; refreshJointSliders(); requestDraw(); };
+</script>
+</body>
+</html>
