@@ -4,6 +4,8 @@
 
 ZAMU is a tool for posing human figures (male and female mannequins) and using them as references when drawing: you can adjust joints, rotate the camera, control perspective (lens/FOV), lighting, and shadows, and save your own poses. Everything works without installing anything and without an internet connection.
 
+<img width="720" height="255" alt="Iluminacion recortado" src="https://github.com/user-attachments/assets/9eb4dcc5-0e85-4f99-9ee1-a2ec57a4ef1b" />
+
 
 ## 🎮 Try it out
 
@@ -18,9 +20,7 @@ ZAMU is a tool for posing human figures (male and female mannequins) and using t
 - Save your poses, **export** them to a file, and **import** them later.
 - Interface available in 7 languages (Spanish, English, Korean, Chinese, Japanese, German, French) with light/dark themes.
 
-<img width="720" height="720" alt="FOV" src="https://github.com/user-attachments/assets/9f2a991e-5d6a-46f4-a0da-dd53958a8cba" />
-<img width="720" height="720" alt="Perspectiva III" src="https://github.com/user-attachments/assets/b8221950-e3df-4bd5-ab93-77475fc398c1" />
-
+<img width="720" height="255" alt="poses recortada" src="https://github.com/user-attachments/assets/284bdd23-3b92-466c-82e9-c407e582a6de" />
 
 ## 🔒 Privacy
 
@@ -39,6 +39,9 @@ Sharing the project also helps a lot. Thank you for being here.
 - A **single HTML file**, with no external dependencies or third-party libraries.
 - Rendered using 2D Canvas in pure JavaScript (no frameworks).
 - Works **offline** and is easy to audit: all the code is in plain sight.
+
+<img width="720" height="255" alt="Perspectiva II recortado" src="https://github.com/user-attachments/assets/6c9ee211-2ebd-47e6-8194-813e4d645223" />
+
 
 ## 🤝 Contribute
 
